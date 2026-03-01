@@ -1,0 +1,202 @@
+@page "/admin"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject IJSRuntime JS
+@inject NavigationManager navigation
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0" style="color: #4B5563">AdminPage</h3>
+    <button class="btn-primary" type="button" @onclick="Logout">
+        Выход
+    </button>
+</div>
+
+<table class="table table-bordered">
+    <thead class="alert-dark" style="background-color: #6366F1">
+        <tr>
+            <th style="color: white">Id</th>
+            <th style="color: white">Name</th>
+            <th style="color: white">Description</th>
+            <th style="color: white">Email</th>
+            <th style="color: white">Password</th>
+            <th style="color: white">Удалить</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (users == null)
+        {
+            <tr>
+                <td colspan="3" class="text-center">Loading...</td>
+            </tr>
+        }
+        else if (!users.Any())
+        {
+            <tr>
+                <td colspan="3" class="text-center">No users found</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var user in users)
+            {
+                <tr @onclick="() => Select(user)">
+                    <td style="color: #6B7280">@user.Id</td>
+                    <td style="color: #6B7280">@user.Name</td>
+                    <td style="color: #6B7280">@user.Description</td>
+                    <td style="color: #6B7280">@user.Email</td>
+                    <td style="color: #6B7280">@user.Password</td>
+                    <td><button class="btn-primary" type="button" @onclick="() => Delete(user)">Удалить</button></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<div style="display:flex; flex-direction:column; gap:5px;">
+    <div class="form-group">
+        <label style="color: #6B7280">Имя</label>
+        <input @bind="selectedUser.Name" type="text" placeholder="Введите имя" />
+    </div>
+            
+    <div class="form-group">
+        <label style="color: #6B7280">О себе</label>
+        <input @bind="selectedUser.Description" type="text" placeholder="Напишите о себе" />
+    </div>
+            
+    <!-- Логин -->
+    <div class="form-group">
+        <label style="color: #6B7280">Email</label>
+        <input @bind="selectedUser.Email" type="text" placeholder="Введите Email" />
+    </div>
+
+    <!-- Пароль -->
+    <div class="form-group">
+        <label style="color: #6B7280">Пароль</label>
+        <input @bind="selectedUser.Password" type="password" placeholder="Введите пароль" />
+    </div>
+    
+    <div class="form-group">
+        <label style="color: #6B7280">Роль</label>
+        <select @bind="selectedUser.RoleId" class="role-select">
+            <option value="" disabled selected hidden>Выберите роль</option>
+            <option value=1>Администратор</option>
+            <option value=2>Пользователь</option>
+        </select>
+    </div>
+            
+    <div style="margin: 20px 0px 0px 0px">
+        <!-- Кнопка входа -->
+        <button type="button" class="btn-primary"
+                @onclick="Click">
+            @contentButton
+        </button>
+        <button type="button" class="btn-primary"
+                style="margin: 0px 0px 0px 10px"
+                @onclick="Clear">
+            Очистить
+        </button>
+    </div>
+    
+    
+</div>
+
+
+@code {
+    [Inject] private ApiRequest api { get; set; }
+    private List<User> users { get; set; }
+    public User selectedUser = new User();
+    private CreateUser roles = new CreateUser();
+    public ElementReference tb;
+    private string contentButton = "Добавить пользователя";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await JS.InvokeAsync<string>("sessionStorage.getItem", "token");
+        var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
+        
+        if (string.IsNullOrEmpty(token) || role == "2")
+        {
+            navigation.NavigateTo("/");
+            return;
+        }
+
+        api.SetToken(token);
+        
+        await getAllUsers();
+    }
+
+    public async Task Logout()
+    {
+        await JS.InvokeAsync<string>("sessionStorage.removeItem", "token");
+        navigation.NavigateTo("/");
+    }
+    
+    public async Task getAllUsers()
+    {
+        var result = await api.GetAllUsers();
+        users = result.list;
+    }
+
+    public async Task Delete(User user)
+    {
+        var result = await api.DeleteUser(user.Id);
+        await getAllUsers();
+        Clear();
+    }
+
+    public async Task Create()
+    {
+        if (!string.IsNullOrWhiteSpace(selectedUser.Name) && !string.IsNullOrWhiteSpace(selectedUser.Email) &&
+            !string.IsNullOrWhiteSpace(selectedUser.Password) && selectedUser.RoleId != null)
+        {
+            var result = await api.CreateUser(selectedUser);
+            await getAllUsers();
+        }
+        else
+        {
+            return;
+        }
+    }
+    
+    public async Task Clear()
+    {
+        selectedUser = new User();
+        contentButton = "Добавить пользователя";
+        await getAllUsers();
+    }
+    
+    public async Task Select(User user)
+    {
+        selectedUser = user;
+        contentButton = "Сохранить изменения";
+    }
+    
+    public async Task Update()
+    {
+        if (!string.IsNullOrWhiteSpace(selectedUser.Name) && !string.IsNullOrWhiteSpace(selectedUser.Email) &&
+            !string.IsNullOrWhiteSpace(selectedUser.Password) && selectedUser.RoleId != null)
+        {
+            var result = await api.UpdateUser(selectedUser.Id, selectedUser);
+            await getAllUsers();
+        }
+        else
+        {
+            return;
+        }
+        
+    }
+
+    public async Task Click()
+    {
+        if (selectedUser.Id == 0)
+        {
+            await Create();
+        }
+        else
+        {
+            await Update();
+        }
+
+        await Clear();
+    }
+}

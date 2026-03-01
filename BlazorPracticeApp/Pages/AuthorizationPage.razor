@@ -1,0 +1,233 @@
+@page "/"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject IJSRuntime JS
+@inject NavigationManager navigation
+
+<div class="page-container">
+    <div class="login-card">
+
+        <h1 class="page-title" style="color: #4B5563">Авторизация</h1>
+
+        <form class="login-form">
+
+            <!-- Логин -->
+            <div class="form-group">
+                <label style="color: #6B7280">Email</label>
+                <input @bind="request.email" type="text" placeholder="Введите Email" />
+            </div>
+
+            <!-- Пароль -->
+            <div class="form-group">
+                <label style="color: #6B7280">Пароль</label>
+                <input class="input" @bind="request.password" type="password" placeholder="Введите пароль" />
+            </div>
+
+            
+
+            <!-- Кнопка входа -->
+            <button type="button" class="btn-primary" @onclick="AuthUser">
+                Войти
+            </button>
+
+            <!-- Регистрация -->
+            <div class="register-block">
+                <span style="color: #6B7280">Нет аккаунта?</span>
+                <a href="/reg" class="link">Зарегистрироваться</a>
+            </div>
+
+          
+
+        </form>
+
+    </div>
+</div>
+
+@code {
+
+    [Inject] private ApiRequest api { get; set; }
+    public RequestAuth request = new RequestAuth();
+
+    public async Task AuthUser()
+    {
+        if (string.IsNullOrWhiteSpace(request.email) || string.IsNullOrWhiteSpace(request.password)) return;
+        
+        var reqdata = await api.AuthUser(request);
+        if (reqdata.status == true)
+        {
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "token", reqdata.token);
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "role", reqdata.roleId);
+            if (reqdata.roleId == 1)
+            {
+                navigation.NavigateTo("/admin");
+            }
+            if (reqdata.roleId == 2)
+            {
+                navigation.NavigateTo($"/user?name={reqdata.name}");
+            }
+            
+        }
+        else
+        {
+            return;
+        }
+    }
+}
+
+
+<style>
+    /* ===== Общий контейнер страницы ===== */
+    .page-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* ===== Карточка авторизации ===== */
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background-color: #ffffff;
+        padding: 35px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ===== Заголовок ===== */
+    .page-title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 25px;
+        color: #1F2937;
+    }
+
+    /* ===== Форма ===== */
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            padding: 10px 12px;
+            border: 1px solid #C7D2FE;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+            .form-group input:focus {
+                outline: none;
+                border-color: #6366F1;
+            }
+
+    /* ===== Опции ===== */
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ===== Ссылки ===== */
+    .link {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+        .link:hover {
+            color: #4F46E5;
+        }
+
+    /* ===== Основная кнопка ===== */
+    .btn-primary {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background-color: #6366F1;
+        color: white;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #4F46E5;
+        }
+
+        .btn-primary:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+    /* ===== Регистрация ===== */
+    .register-block {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    /* ===== Разделитель ===== */
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 10px 0;
+        color: #888;
+    }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider span {
+            padding: 0 10px;
+        }
+
+    /* ===== Соцкнопки ===== */
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .btn-social {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #ccc;
+        background-color: #f9fafb;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+        .btn-social:hover {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+</style>

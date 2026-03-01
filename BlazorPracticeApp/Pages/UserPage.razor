@@ -1,0 +1,48 @@
+@page "/user"
+@using BlazorPracticeApp.ApiRequest.Models
+@using Microsoft.AspNetCore.Components
+@inject IJSRuntime JS
+@inject NavigationManager navigation
+
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0" style="color: #4B5563">AdminPage</h3>
+    <button class="btn-primary" type="button" @onclick="Logout">
+        Выход
+    </button>
+</div>
+<div class="mb-4">
+    <p class="text-muted fs-5 mb-0">Привет, @name</p>
+</div>
+
+@code
+{
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string name { get; set; }
+    
+    public async Task Logout()
+    {
+        await JS.InvokeAsync<string>("sessionStorage.removeItem", "token");
+        navigation.NavigateTo("/");
+    }
+}
+
+
+<style>
+    .btn-primary {
+        padding: 7px;
+        border: none;
+        border-radius: 8px;
+        background-color: #6366F1;
+        color: white;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #4F46E5;
+        }
+</style>

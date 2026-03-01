@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BlazorPracticeApp.Api/BlazorPracticeApp.Api.csproj" Id="09dc06e9-1609-458a-8a37-b293c6abf557" />
+  <Project Path="BlazorPracticeApp/BlazorPracticeApp.csproj" />
+</Solution>
