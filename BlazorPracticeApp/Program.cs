@@ -11,7 +11,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<ApiRequest>();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5298") });
+// API запущен на порту 5086 (см. launchSettings.json API)
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5086") });
 
 await builder.Build().RunAsync();
     

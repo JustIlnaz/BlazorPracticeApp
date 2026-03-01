@@ -32,11 +32,23 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var responce = await httpClient.GetAsync(url);
-            var result = await responce.Content.ReadAsStringAsync();
-            var deserializeResult = JsonSerializer.Deserialize<GetAllUsers>(result, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var response = await httpClient.GetAsync(url);
+            var result = await response.Content.ReadAsStringAsync();
 
-            return deserializeResult ?? new GetAllUsers();
+            if (!response.IsSuccessStatusCode)
+            {
+                return new GetAllUsers
+                {
+                    status = false,
+                    list = new List<User>()
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<GetAllUsers>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new GetAllUsers { status = false, list = new List<User>() };
         }
 
         public async Task<ResultActionUser> CreateUser(User createUser)
@@ -51,9 +63,31 @@ namespace BlazorPracticeApp.ApiRequest
 
             var response = await httpClient.PostAsJsonAsync(url, createUser);
             var result = await response.Content.ReadAsStringAsync();
-            var deserializeResult = JsonSerializer.Deserialize<ResultActionUser>(result);
 
-            return deserializeResult ?? new ResultActionUser();
+            if (!response.IsSuccessStatusCode)
+            {
+                return new ResultActionUser
+                {
+                    status = false,
+                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
+                };
+            }
+
+            var trimmed = result.TrimStart();
+            if (string.IsNullOrWhiteSpace(result) || trimmed[0] != '{')
+            {
+                return new ResultActionUser
+                {
+                    status = false,
+                    message = "Некорректный ответ сервера"
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<ResultActionUser>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new ResultActionUser { status = false, message = "Не удалось прочитать ответ сервера" };
         }
 
         public async Task<ResultActionUser> UpdateUser(int id, User updateUser)
@@ -111,3 +145,4 @@ namespace BlazorPracticeApp.ApiRequest
         }
     }
 }
+    

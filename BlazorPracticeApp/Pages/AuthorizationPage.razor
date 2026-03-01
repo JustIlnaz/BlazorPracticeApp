@@ -11,26 +11,20 @@
 
         <form class="login-form">
 
-            <!-- Логин -->
             <div class="form-group">
                 <label style="color: #6B7280">Email</label>
                 <input @bind="request.email" type="text" placeholder="Введите Email" />
             </div>
 
-            <!-- Пароль -->
             <div class="form-group">
                 <label style="color: #6B7280">Пароль</label>
                 <input class="input" @bind="request.password" type="password" placeholder="Введите пароль" />
             </div>
 
-            
-
-            <!-- Кнопка входа -->
             <button type="button" class="btn-primary" @onclick="AuthUser">
                 Войти
             </button>
 
-            <!-- Регистрация -->
             <div class="register-block">
                 <span style="color: #6B7280">Нет аккаунта?</span>
                 <a href="/reg" class="link">Зарегистрироваться</a>
@@ -76,158 +70,163 @@
 
 
 <style>
-    /* ===== Общий контейнер страницы ===== */
     .page-container {
-        max-width: 900px;
+        max-width: 960px;
         margin: 0 auto;
-        padding: 40px 20px;
+        padding: 48px 20px;
+        min-height: 100vh;
         display: flex;
+        align-items: center;
         justify-content: center;
+        background:
+            radial-gradient(circle at 0% 0%, #1f2937 0, transparent 55%),
+            radial-gradient(circle at 100% 100%, #0f172a 0, transparent 55%),
+            #020617;
     }
 
-    /* ===== Карточка авторизации ===== */
     .login-card {
         width: 100%;
         max-width: 420px;
-        background-color: #ffffff;
-        padding: 35px;
-        border-radius: 12px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        padding: 30px 26px 26px;
+        border-radius: 18px;
+        background:
+            linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+        border: 1px solid rgba(15, 118, 110, 0.55);
+        box-shadow:
+            0 30px 80px rgba(0, 0, 0, 0.85),
+            0 0 0 1px rgba(15, 23, 42, 0.8);
+        color: #e5e7eb;
     }
 
-    /* ===== Заголовок ===== */
     .page-title {
         text-align: center;
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 25px;
-        color: #1F2937;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 0 0 22px;
+        color: #e5e7eb;
     }
 
-    /* ===== Форма ===== */
     .login-form {
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 16px;
     }
 
     .form-group {
         display: flex;
         flex-direction: column;
+        gap: 6px;
     }
 
         .form-group label {
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #333;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #9ca3af;
         }
 
         .form-group input {
             padding: 10px 12px;
-            border: 1px solid #C7D2FE;
-            border-radius: 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background-color: #020617;
+            color: #e5e7eb;
             font-size: 14px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
         }
+
+            .form-group input::placeholder {
+                color: #6b7280;
+            }
 
             .form-group input:focus {
                 outline: none;
-                border-color: #6366F1;
+                background-color: #020617;
+                border-color: #14b8a6;
+                box-shadow:
+                    0 0 0 1px rgba(45, 212, 191, 0.6),
+                    0 18px 35px rgba(15, 23, 42, 0.9);
             }
 
-    /* ===== Опции ===== */
-    .form-options {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* ===== Ссылки ===== */
     .link {
-        color: #2563eb;
+        color: #22c55e;
         text-decoration: none;
+        font-weight: 500;
+        position: relative;
     }
 
-        .link:hover {
-            color: #4F46E5;
+        .link::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #4ade80, transparent);
+            opacity: 0;
+            transform: translateY(3px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
         }
 
-    /* ===== Основная кнопка ===== */
+        .link:hover {
+            color: #4ade80;
+        }
+
+            .link:hover::after {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
     .btn-primary {
-        padding: 12px;
-        border: none;
-        border-radius: 8px;
-        background-color: #6366F1;
-        color: white;
-        font-size: 15px;
-        font-weight: 500;
+        width: 100%;
+        margin-top: 6px;
+        padding: 11px 14px;
+        border-radius: 999px;
+        border: 0;
+        background:
+            radial-gradient(circle at 0% 0%, #22c55e 0, transparent 60%),
+            linear-gradient(135deg, #022c22, #064e3b 40%, #16a34a 100%);
+        color: #ecfdf5;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         cursor: pointer;
-        transition: background-color 0.3s ease;
+        box-shadow:
+            0 18px 40px rgba(5, 46, 22, 0.9),
+            0 0 0 1px rgba(16, 185, 129, 0.7);
+        transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.12s ease;
     }
 
         .btn-primary:hover {
-            background-color: #4F46E5;
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+            box-shadow:
+                0 22px 60px rgba(6, 78, 59, 0.95),
+                0 0 0 1px rgba(22, 163, 74, 0.8);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow:
+                0 10px 26px rgba(6, 78, 59, 0.9),
+                0 0 0 1px rgba(21, 128, 61, 0.85);
         }
 
         .btn-primary:disabled {
-            background-color: #9ca3af;
+            background: #1f2937;
+            box-shadow: none;
             cursor: not-allowed;
+            color: #6b7280;
         }
 
-    /* ===== Регистрация ===== */
     .register-block {
         text-align: center;
-        font-size: 14px;
+        font-size: 13px;
+        margin-top: 16px;
+        color: #9ca3af;
     }
-
-    /* ===== Разделитель ===== */
-    .divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: 10px 0;
-        color: #888;
-    }
-
-        .divider::before,
-        .divider::after {
-            content: "";
-            flex: 1;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .divider span {
-            padding: 0 10px;
-        }
-
-    /* ===== Соцкнопки ===== */
-    .social-login {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-    }
-
-    .btn-social {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 1px solid #ccc;
-        background-color: #f9fafb;
-        cursor: pointer;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-
-        .btn-social:hover {
-            background-color: #2563eb;
-            color: white;
-            border-color: #2563eb;
-        }
-
 </style>

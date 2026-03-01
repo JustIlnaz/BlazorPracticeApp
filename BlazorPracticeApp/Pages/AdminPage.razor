@@ -4,100 +4,105 @@
 @inject IJSRuntime JS
 @inject NavigationManager navigation
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="m-0" style="color: #4B5563">AdminPage</h3>
-    <button class="btn-primary" type="button" @onclick="Logout">
-        Выход
-    </button>
-</div>
-
-<table class="table table-bordered">
-    <thead class="alert-dark" style="background-color: #6366F1">
-        <tr>
-            <th style="color: white">Id</th>
-            <th style="color: white">Name</th>
-            <th style="color: white">Description</th>
-            <th style="color: white">Email</th>
-            <th style="color: white">Password</th>
-            <th style="color: white">Удалить</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (users == null)
-        {
-            <tr>
-                <td colspan="3" class="text-center">Loading...</td>
-            </tr>
-        }
-        else if (!users.Any())
-        {
-            <tr>
-                <td colspan="3" class="text-center">No users found</td>
-            </tr>
-        }
-        else
-        {
-            @foreach (var user in users)
-            {
-                <tr @onclick="() => Select(user)">
-                    <td style="color: #6B7280">@user.Id</td>
-                    <td style="color: #6B7280">@user.Name</td>
-                    <td style="color: #6B7280">@user.Description</td>
-                    <td style="color: #6B7280">@user.Email</td>
-                    <td style="color: #6B7280">@user.Password</td>
-                    <td><button class="btn-primary" type="button" @onclick="() => Delete(user)">Удалить</button></td>
-                </tr>
-            }
-        }
-    </tbody>
-</table>
-
-<div style="display:flex; flex-direction:column; gap:5px;">
-    <div class="form-group">
-        <label style="color: #6B7280">Имя</label>
-        <input @bind="selectedUser.Name" type="text" placeholder="Введите имя" />
-    </div>
-            
-    <div class="form-group">
-        <label style="color: #6B7280">О себе</label>
-        <input @bind="selectedUser.Description" type="text" placeholder="Напишите о себе" />
-    </div>
-            
-    <!-- Логин -->
-    <div class="form-group">
-        <label style="color: #6B7280">Email</label>
-        <input @bind="selectedUser.Email" type="text" placeholder="Введите Email" />
-    </div>
-
-    <!-- Пароль -->
-    <div class="form-group">
-        <label style="color: #6B7280">Пароль</label>
-        <input @bind="selectedUser.Password" type="password" placeholder="Введите пароль" />
-    </div>
-    
-    <div class="form-group">
-        <label style="color: #6B7280">Роль</label>
-        <select @bind="selectedUser.RoleId" class="role-select">
-            <option value="" disabled selected hidden>Выберите роль</option>
-            <option value=1>Администратор</option>
-            <option value=2>Пользователь</option>
-        </select>
-    </div>
-            
-    <div style="margin: 20px 0px 0px 0px">
-        <!-- Кнопка входа -->
-        <button type="button" class="btn-primary"
-                @onclick="Click">
-            @contentButton
-        </button>
-        <button type="button" class="btn-primary"
-                style="margin: 0px 0px 0px 10px"
-                @onclick="Clear">
-            Очистить
+<div class="admin-shell">
+    <div class="admin-shell__header">
+        <div>
+            <p class="admin-shell__label">Панель администратора</p>
+            <h3 class="admin-shell__title">Управление пользователями</h3>
+        </div>
+        <button class="btn-primary" type="button" @onclick="Logout">
+            Выход
         </button>
     </div>
-    
-    
+
+    <div class="admin-shell__columns">
+        <div class="admin-shell__table">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Имя</th>
+                        <th>Описание</th>
+                        <th>Email</th>
+                        <th>Пароль</th>
+                        <th class="text-center">Удалить</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (users == null)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">Загрузка...</td>
+                        </tr>
+                    }
+                    else if (!users.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">Нет пользователей</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var user in users)
+                        {
+                            <tr @onclick="() => Select(user)">
+                                <td>@user.Id</td>
+                                <td>@user.Name</td>
+                                <td>@user.Description</td>
+                                <td>@user.Email</td>
+                                <td>@user.Password</td>
+                                <td class="text-center">
+                                    <button class="btn-danger-soft" type="button" @onclick="() => Delete(user)">Удалить</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-shell__form">
+            <div class="admin-form">
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input @bind="selectedUser.Name" type="text" placeholder="Введите имя" />
+                </div>
+
+                <div class="form-group">
+                    <label>О себе</label>
+                    <input @bind="selectedUser.Description" type="text" placeholder="Напишите о себе" />
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input @bind="selectedUser.Email" type="text" placeholder="Введите Email" />
+                </div>
+
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input @bind="selectedUser.Password" type="password" placeholder="Введите пароль" />
+                </div>
+
+                <div class="form-group">
+                    <label>Роль</label>
+                    <select @bind="selectedUser.RoleId" class="role-select">
+                        <option value="" disabled selected hidden>Выберите роль</option>
+                        <option value=1>Администратор</option>
+                        <option value=2>Пользователь</option>
+                    </select>
+                </div>
+
+                <div class="admin-form__buttons">
+                    <button type="button" class="btn-primary" @onclick="Click">
+                        @contentButton
+                    </button>
+                    <button type="button" class="btn-secondary" @onclick="Clear">
+                        Очистить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -200,3 +205,240 @@
         await Clear();
     }
 }
+
+<style>
+    .admin-shell {
+        padding: 20px 20px 18px;
+        border-radius: 22px;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16), transparent 55%),
+            radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.16), transparent 55%),
+            #020617;
+        border: 1px solid rgba(31, 41, 55, 0.9);
+        box-shadow:
+            0 40px 90px rgba(0, 0, 0, 0.98),
+            0 0 0 1px rgba(15, 23, 42, 0.9);
+        color: #e5e7eb;
+    }
+
+    .admin-shell__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 16px;
+    }
+
+    .admin-shell__label {
+        margin: 0 0 2px;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #9ca3af;
+        font-weight: 600;
+    }
+
+    .admin-shell__title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #f9fafb;
+    }
+
+    .admin-shell__columns {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 18px;
+    }
+
+    @@media (max-width: 992px) {
+        .admin-shell__columns {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    .admin-shell__table,
+    .admin-shell__form {
+        border-radius: 18px;
+        background: radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+        border: 1px solid rgba(31, 41, 55, 0.95);
+        padding: 14px 14px 12px;
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.9);
+    }
+
+    .admin-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #e5e7eb;
+    }
+
+        .admin-table thead th {
+            border: 0;
+            background:
+                linear-gradient(135deg, #0f172a, #111827);
+            color: #9ca3af;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .admin-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.12s ease, transform 0.06s ease, box-shadow 0.12s ease;
+        }
+
+            .admin-table tbody tr:nth-child(even) {
+                background-color: rgba(15, 23, 42, 0.75);
+            }
+
+            .admin-table tbody tr:nth-child(odd) {
+                background-color: rgba(15, 23, 42, 0.6);
+            }
+
+            .admin-table tbody tr:hover {
+                background-color: rgba(8, 47, 73, 0.95);
+                transform: translateY(-1px);
+                box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
+            }
+
+        .admin-table tbody td {
+            border-color: rgba(31, 41, 55, 0.95);
+            color: #d1d5db;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+    .admin-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .admin-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+            .admin-form .form-group label {
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: #9ca3af;
+            }
+
+            .admin-form .form-group input,
+            .admin-form .form-group select {
+                padding: 8px 10px;
+                border-radius: 10px;
+                border: 1px solid rgba(55, 65, 81, 0.95);
+                background-color: #020617;
+                color: #e5e7eb;
+                font-size: 13px;
+                transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+            }
+
+                .admin-form .form-group input::placeholder {
+                    color: #6b7280;
+                }
+
+                .admin-form .form-group input:focus,
+                .admin-form .form-group select:focus {
+                    outline: none;
+                    background-color: #020617;
+                    border-color: #38bdf8;
+                    box-shadow:
+                        0 0 0 1px rgba(56, 189, 248, 0.8),
+                        0 16px 32px rgba(15, 23, 42, 0.9);
+                }
+
+    .role-select {
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%), linear-gradient(135deg, #6b7280 50%, transparent 50%);
+        background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+    }
+
+    .admin-form__buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 4px;
+    }
+
+    .btn-primary {
+        padding: 9px 18px;
+        border-radius: 999px;
+        border: 0;
+        background:
+            radial-gradient(circle at 0% 0%, #22c55e 0, transparent 60%),
+            linear-gradient(135deg, #064e3b, #16a34a 40%, #22c55e 100%);
+        color: #ecfdf5;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow:
+            0 18px 40px rgba(5, 46, 22, 0.9),
+            0 0 0 1px rgba(22, 163, 74, 0.85);
+        transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.12s ease;
+        white-space: nowrap;
+    }
+
+        .btn-primary:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+            box-shadow:
+                0 22px 56px rgba(6, 78, 59, 0.95),
+                0 0 0 1px rgba(34, 197, 94, 0.9);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow:
+                0 10px 26px rgba(6, 78, 59, 0.9),
+                0 0 0 1px rgba(21, 128, 61, 0.9);
+        }
+
+    .btn-secondary {
+        padding: 9px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(55, 65, 81, 0.95);
+        background-color: #020617;
+        color: #e5e7eb;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        white-space: nowrap;
+    }
+
+        .btn-secondary:hover {
+            background-color: #0b1120;
+            border-color: #38bdf8;
+            color: #f9fafb;
+        }
+
+    .btn-danger-soft {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 0;
+        background-color: rgba(248, 113, 113, 0.14);
+        color: #fecaca;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.12s ease, color 0.12s ease;
+    }
+
+        .btn-danger-soft:hover {
+            background-color: rgba(248, 113, 113, 0.25);
+            color: #fee2e2;
+        }
+</style>

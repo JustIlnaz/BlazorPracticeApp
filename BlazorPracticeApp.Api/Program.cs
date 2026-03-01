@@ -21,7 +21,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorWasm", policy =>
     {
-        policy.WithOrigins("http://localhost:5070").AllowAnyHeader().AllowAnyMethod();
+        // Разрешаем запросы с фронтенда, который работает на 5010
+        policy.WithOrigins("http://localhost:5010")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
@@ -34,6 +37,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowBlazorWasm");
 
 app.UseAuthorization();
 

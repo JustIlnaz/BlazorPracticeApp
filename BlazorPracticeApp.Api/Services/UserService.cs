@@ -1,4 +1,4 @@
-﻿using BlazorPracticeApp.Api.ContextDatabase;
+using BlazorPracticeApp.Api.ContextDatabase;
 using BlazorPracticeApp.Api.DTOs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.JWT;
@@ -21,15 +21,15 @@ namespace BlazorPracticeApp.Api.Service
             accessor = _accessor;
         }
 
-            public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await context.Users.Where(p => p.Email != "ilnaz@gmail.com").ToListAsync();
+            return new OkObjectResult(new
             {
-                var users = context.Users.Where(p => p.Email != "ilnaz@gmail.com").ToListAsync();
-                return new OkObjectResult(new
-                {
-                    status = true,
-                    list = users
-                });
-            }
+                status = true,
+                list = users
+            });
+        }
 
         public async Task<IActionResult> UpdateUser(int id, NewUserDto update_user)
         {
