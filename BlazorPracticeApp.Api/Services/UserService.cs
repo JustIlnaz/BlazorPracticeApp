@@ -34,62 +34,40 @@ namespace BlazorPracticeApp.Api.Service
 
         public async Task<IActionResult> UpdateUser(int id, NewUserDto update_user)
         {
-            
-            bool IsEmail = context.Users.Any(p => p.Email == update_user.Email);
             var user = await context.Users.FirstOrDefaultAsync(p => p.Id == id);
-            if (user != null && IsEmail)
-            {
-                user.Email = update_user.Email;
-                user.Password = update_user.Password;
-                user.Name = update_user.Name;
-                user.Description = update_user.Description;
-                user.RoleId = update_user.RoleId;
-                await context.SaveChangesAsync();
-
-                return new OkObjectResult(new
-                {
-                    status = true,
-                    message = "Пользователь успешно обновлен"
-                });
-            }
-            else if (user == null && !IsEmail)
+            
+            if (user == null)
             {
                 return new OkObjectResult(new
                 {
                     status = false,
-                    message = $"Пользователь с id {id} не существует и указанный вами Email занят"
-                }
-                );
+                    message = $"Пользователь с id {id} не существует"
+                });
             }
-            else if (!IsEmail)
+
+            var existingUser = await context.Users.FirstOrDefaultAsync(p => p.Email == update_user.Email && p.Id != id);
+            
+            if (existingUser != null)
             {
                 return new OkObjectResult(new
                 {
                     status = false,
                     message = "Указанный вами Email занят"
-                }
-                );
+                });
             }
 
-            else if (user == null)
-            {
-                return new OkObjectResult(new
-                {
-                    status = false,
-                    message = $"Пользователь с id  {id} не существует"
-                }
-                );
-            }
+            user.Email = update_user.Email;
+            user.Password = update_user.Password;
+            user.Name = update_user.Name;
+            user.Description = update_user.Description;
+            user.RoleId = update_user.RoleId;
+            await context.SaveChangesAsync();
 
-            else
+            return new OkObjectResult(new
             {
-                return new OkObjectResult(new
-                {
-                    status = false,
-                    message = "Ошибка"
-                }
-                );
-            }
+                status = true,
+                message = "Пользователь успешно обновлен"
+            });
         }
 
         public async Task<IActionResult> DeleteUser(int id)
