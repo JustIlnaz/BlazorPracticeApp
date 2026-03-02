@@ -49,13 +49,13 @@
 
 @code {
 
-    [Inject] private ApiRequest api { get; set; }
+    [Inject] private ApiRequest Api { get; set; }
     public CreateUser user = new CreateUser();
 
     public async Task Registration()
     {
         if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrWhiteSpace(user.Name)) return;
-        var regdata = await api.RegistrationUser(user);
+        var regdata = await Api.RegistrationUser(user);
         if (regdata.status == true)
         {
             navigation.NavigateTo("/");
@@ -69,7 +69,6 @@
 }
 
 <style>
-    /* ===== Общий контейнер страницы ===== */
     .page-container {
         max-width: 900px;
         margin: 0 auto;
@@ -78,7 +77,6 @@
         justify-content: center;
     }
 
-    /* ===== Карточка авторизации ===== */
     .login-card {
         width: 100%;
         max-width: 420px;
@@ -88,7 +86,6 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
     }
 
-    /* ===== Заголовок ===== */
     .page-title {
         text-align: center;
         font-size: 28px;
@@ -97,7 +94,6 @@
         color: #222;
     }
 
-    /* ===== Форма ===== */
     .login-form {
         display: flex;
         flex-direction: column;
@@ -127,7 +123,6 @@
                 border-color: #6366F1;
             }
 
-    /* ===== Опции ===== */
     .form-options {
         display: flex;
         justify-content: space-between;
@@ -141,7 +136,6 @@
         gap: 6px;
     }
 
-    /* ===== Ссылки ===== */
     .link {
         color: #2563eb;
         text-decoration: none;
@@ -151,7 +145,6 @@
             color: #4F46E5;
         }
 
-    /* ===== Основная кнопка ===== */
     .btn-primary {
         padding: 12px;
         border: none;
@@ -173,13 +166,11 @@
             cursor: not-allowed;
         }
 
-    /* ===== Регистрация ===== */
     .register-block {
         text-align: center;
         font-size: 14px;
     }
 
-    /* ===== Разделитель ===== */
     .divider {
         display: flex;
         align-items: center;
@@ -199,7 +190,6 @@
             padding: 0 10px;
         }
 
-    /* ===== Соцкнопки ===== */
     .social-login {
         display: flex;
         justify-content: center;

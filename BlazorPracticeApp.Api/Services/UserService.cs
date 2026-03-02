@@ -3,6 +3,7 @@ using BlazorPracticeApp.Api.DTOs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.JWT;
 using BlazorPracticeApp.Api.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +24,7 @@ namespace BlazorPracticeApp.Api.Service
 
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await context.Users.Where(p => p.Email != "ilnaz@gmail.com").ToListAsync();
+            var users = await context.Users.ToListAsync();
             return new OkObjectResult(new
             {
                 status = true,
@@ -33,7 +34,8 @@ namespace BlazorPracticeApp.Api.Service
 
         public async Task<IActionResult> UpdateUser(int id, NewUserDto update_user)
         {
-            bool IsEmail = context.Users.Any(p => p.Email == update_user.Email && p.Id == id);
+            
+            bool IsEmail = context.Users.Any(p => p.Email == update_user.Email);
             var user = await context.Users.FirstOrDefaultAsync(p => p.Id == id);
             if (user != null && IsEmail)
             {

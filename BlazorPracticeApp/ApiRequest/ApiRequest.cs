@@ -1,7 +1,6 @@
 using BlazorPracticeApp.ApiRequest.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Blazored.LocalStorage;
 
 
 namespace BlazorPracticeApp.ApiRequest
@@ -9,19 +8,17 @@ namespace BlazorPracticeApp.ApiRequest
     public class ApiRequest
     {
         private readonly HttpClient httpClient;
-        private readonly ILocalStorageService localStorage;
         private string? token;
             
-        public ApiRequest(HttpClient _httpClient, ILocalStorageService _localStorage)
+        public ApiRequest(HttpClient _httpClient)
         {
             httpClient = _httpClient;
-            localStorage = _localStorage;
         }
 
         public void SetToken(string t)
         {
             token = t;
-        }
+        }   
         public async Task<GetAllUsers> GetAllUsers()
         {
             var url = "/api/GetAll";
