@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorPracticeApp.Api.Interfaces
 {
-    public interface IMovieInterface
+    public interface IMovieService
     {
         Task<IActionResult> GetAllMovies();
         Task<IActionResult> GetMovieById(int id);

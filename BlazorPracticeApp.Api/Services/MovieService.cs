@@ -10,7 +10,7 @@ using System.Net.NetworkInformation;
 
 namespace BlazorPracticeApp.Api.Services
 {
-    public class MovieService : IMovieInterface
+    public class MovieService : IMovieService
     {
         public readonly ContextDb context;
 

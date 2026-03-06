@@ -8,9 +8,9 @@ namespace BlazorPracticeApp.Api.Controllers
 {
     public class MoviesController
     {
-        private readonly IMovieInterface service;
+        private readonly IMovieService service;
 
-        public MoviesController(IMovieInterface _service)
+        public MoviesController(IMovieService _service)
         {
             service = _service;
         }
