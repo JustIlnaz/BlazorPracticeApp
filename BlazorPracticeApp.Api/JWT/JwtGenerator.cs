@@ -7,6 +7,7 @@ namespace BlazorPracticeApp.Api.JWT
 {
     public class JwtGenerator
     {
+
         private readonly string secretKey;
         public JwtGenerator(IConfiguration configuration)
         {

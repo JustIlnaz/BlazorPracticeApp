@@ -24,6 +24,7 @@ namespace BlazorPracticeApp.Api.JWT
             {
                 context.Result = new JsonResult(new { error = "Сессия не передана" }) { StatusCode = 401 };
                 return;
+
             }
 
             var session = db.Sessions.Include(p => p.Users).FirstOrDefault(p => p.Token == token);
