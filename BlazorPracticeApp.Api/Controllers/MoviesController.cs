@@ -41,7 +41,7 @@ namespace BlazorPracticeApp.Api.Controllers
 
 
         [HttpPut]
-        [Route("/api/movies/UpdateUser/{id}")]
+        [Route("/api/movies/UpdateMovies/{id}")]
         [RoleAutorizeAttribute([1])]
 
         public async Task<IActionResult> UpdateMovie(int id, UpdateMovieDto updateMovieDto)
