@@ -1,4 +1,4 @@
-﻿using BlazorPracticeApp.Api.DTOs;
+using BlazorPracticeApp.Api.DTOs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.JWT;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +6,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace BlazorPracticeApp.Api.Controllers
 {
-    public class MoviesController
+    [ApiController]
+    [Route("api/[controller]")]
+    public class MoviesController : ControllerBase
     {
         private readonly IMovieService service;
 
@@ -16,23 +18,22 @@ namespace BlazorPracticeApp.Api.Controllers
         }
 
         [HttpGet]
-        [Route("/api/movies/GetMovies")]
+        // GET /api/movies
         public async Task<IActionResult> GetMovies()
         {
             return await service.GetAllMovies();
         }
 
-        [HttpGet]
-        [Route("/api/movies/GetMovieById/{id}")]
-
+        // GET /api/movies/{id}
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetMovieId(int id)
         {
             return await service.GetMovieById(id);
         }
 
 
+        // POST /api/movies
         [HttpPost]
-        [Route("/api/movies/CreateMovie")]
         [RoleAutorizeAttribute([1])]
         public async Task<IActionResult> CreateNewMovie(NewMovieDto newMovieDto)
         {
@@ -40,17 +41,16 @@ namespace BlazorPracticeApp.Api.Controllers
         }
 
 
-        [HttpPut]
-        [Route("/api/movies/UpdateMovies/{id}")]
+        // PUT /api/movies/{id}
+        [HttpPut("{id}")]
         [RoleAutorizeAttribute([1])]
-
         public async Task<IActionResult> UpdateMovie(int id, UpdateMovieDto updateMovieDto)
         {
             return await service.UpdateMovie(id, updateMovieDto);
         }
 
-        [HttpDelete]
-        [Route("/api/movies/DeleteMovie/{id}")]
+        // DELETE /api/movies/{id}
+        [HttpDelete("{id}")]
         [RoleAutorizeAttribute([1])]
         public async Task<IActionResult> DeleteMovie(int id)
         {

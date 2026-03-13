@@ -96,9 +96,14 @@
                     <button type="button" class="btn-primary" @onclick="Click">
                         @contentButton
                     </button>
+                    <button type="button" class="btn-primary" @onclick="ClickFilm">
+                        К фильмам
+                    </button>
                     <button type="button" class="btn-secondary" @onclick="Clear">
                         Очистить
                     </button>
+
+                   
                 </div>
             </div>
         </div>
@@ -117,7 +122,7 @@
     {
         var token = await JS.InvokeAsync<string>("sessionStorage.getItem", "token");
         var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
-        
+
         if (string.IsNullOrEmpty(token) || role == "2")
         {
             navigation.NavigateTo("/");
@@ -125,7 +130,7 @@
         }
 
         api.SetToken(token);
-        
+
         await getAllUsers();
     }
 
@@ -134,7 +139,7 @@
         await JS.InvokeAsync<string>("sessionStorage.removeItem", "token");
         navigation.NavigateTo("/");
     }
-    
+
     public async Task getAllUsers()
     {
         var result = await api.GetAllUsers();
@@ -161,20 +166,20 @@
             return;
         }
     }
-    
+
     public async Task Clear()
     {
         selectedUser = new User();
         contentButton = "Добавить пользователя";
         await getAllUsers();
     }
-    
+
     public async Task Select(User user)
     {
         selectedUser = user;
         contentButton = "Сохранить изменения";
     }
-    
+
     public async Task Update()
     {
         if (!string.IsNullOrWhiteSpace(selectedUser.Name) && !string.IsNullOrWhiteSpace(selectedUser.Email) &&
@@ -187,7 +192,7 @@
         {
             return;
         }
-        
+
     }
 
     public async Task Click()
@@ -202,6 +207,11 @@
         }
 
         await Clear();
+    }
+
+    public async Task ClickFilm()
+    {
+        navigation.NavigateTo("/movies");
     }
 }
 

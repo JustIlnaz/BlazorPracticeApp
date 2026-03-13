@@ -1,7 +1,6 @@
-﻿using BlazorPracticeApp.Api.DTOs;
+using BlazorPracticeApp.Api.DTOs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.JWT;
-using BlazorPracticeApp.ApiRequest.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

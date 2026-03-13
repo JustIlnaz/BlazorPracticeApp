@@ -1,0 +1,307 @@
+@page "/movies"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject ApiRequest Api
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<h2 class="movies-title">Кино дайджест</h2>
+
+<div class="movies-layout">
+    <section class="movies-filters">
+        <div class="filter-group">
+            <label>Поиск</label>
+            <input @bind="searchTerm" placeholder="Название или описание" />
+        </div>
+
+        <div class="filter-group">
+            <label>Жанр</label>
+            <select @bind="selectedGenre">
+                <option value="">Все жанры</option>
+                @foreach (var genre in Genres)
+                {
+                    <option value="@genre">@genre</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Сортировка</label>
+            <select @bind="sortOption">
+                <option value="name">По названию (A–Z)</option>
+                <option value="rating_desc">По рейтингу (убывание)</option>
+                <option value="rating_asc">По рейтингу (возрастание)</option>
+                <option value="date_desc">По дате выхода (новые)</option>
+                <option value="date_asc">По дате выхода (старые)</option>
+            </select>
+        </div>
+
+        <button class="btn-primary"
+                type="button"
+                @onclick="GoToCreateMovie"
+                disabled="@(!isAdmin)"
+                title="Доступно только администратору">
+            Добавить фильм
+        </button>
+    </section>
+
+    <section class="movies-table-shell">
+        <table class="movies-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Жанр</th>
+                    <th>Дата выхода</th>
+                    <th>Рейтинг</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (movies == null)
+                {
+                    <tr>
+                        <td colspan="4" class="text-muted text-center">Загрузка...</td>
+                    </tr>
+                }
+                else if (!FilteredMovies.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-muted text-center">Фильмы не найдены</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var movie in FilteredMovies)
+                    {
+                        <tr @onclick="() => OpenDetails(movie.Id)">
+                            <td>@movie.Name</td>
+                            <td>@movie.Genre</td>
+                            <td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td>
+                            <td>@movie.Rating</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </section>
+</div>
+
+@code {
+    private List<Movie>? movies;
+    private string? searchTerm;
+    private string? selectedGenre;
+    private string sortOption = "date_desc";
+    private bool isAdmin;
+
+    private IEnumerable<string> Genres =>
+        movies?
+            .Where(m => !string.IsNullOrWhiteSpace(m.Genre))
+            .Select(m => m.Genre!)
+            .Distinct()
+            .OrderBy(g => g) ?? Enumerable.Empty<string>();
+
+    private IEnumerable<Movie> FilteredMovies
+    {
+        get
+        {
+            if (movies == null)
+                return Enumerable.Empty<Movie>();
+
+            IEnumerable<Movie> query = movies;
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim().ToLower();
+                query = query.Where(m =>
+                    (!string.IsNullOrEmpty(m.Name) && m.Name.ToLower().Contains(term)) ||
+                    (!string.IsNullOrEmpty(m.Description) && m.Description.ToLower().Contains(term)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedGenre))
+            {
+                query = query.Where(m => string.Equals(m.Genre, selectedGenre, StringComparison.OrdinalIgnoreCase));
+            }
+
+            query = sortOption switch
+            {
+                "name" => query.OrderBy(m => m.Name),
+                "rating_desc" => query.OrderByDescending(m => m.Rating),
+                "rating_asc" => query.OrderBy(m => m.Rating),
+                "date_asc" => query.OrderBy(m => m.ReleaseDate),
+                _ => query.OrderByDescending(m => m.ReleaseDate),
+            };
+
+            return query.ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
+        isAdmin = role == "1";
+
+        var result = await Api.GetMovies();
+        movies = result.list ?? new List<Movie>();
+    }
+
+    private void OpenDetails(int id)
+    {
+        Navigation.NavigateTo($"/movies/{id}");
+    }
+
+    private void GoToCreateMovie()
+    {
+        if (!isAdmin)
+            return;
+
+        Navigation.NavigateTo("/movies/new");
+    }
+}
+
+<style>
+    .movies-title {
+        margin: 0 0 14px;
+        font-size: 24px;
+        font-weight: 600;
+        color: #f9fafb;
+    }
+
+    .movies-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .movies-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16), transparent 55%),
+            linear-gradient(135deg, #020617, #020617);
+        border: 1px solid rgba(31, 41, 55, 0.95);
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 180px;
+        flex: 1;
+    }
+
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.95);
+            background-color: #020617;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+
+    .movies-table-shell {
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+        border: 1px solid rgba(31, 41, 55, 0.95);
+        padding: 12px 12px 10px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95);
+    }
+
+    .movies-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #e5e7eb;
+    }
+
+        .movies-table thead th {
+            border: 0;
+            background: linear-gradient(135deg, #0f172a, #111827);
+            color: #9ca3af;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 10px;
+        }
+
+        .movies-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.12s ease, transform 0.06s ease, box-shadow 0.12s ease;
+        }
+
+            .movies-table tbody tr:nth-child(even) {
+                background-color: rgba(15, 23, 42, 0.8);
+            }
+
+            .movies-table tbody tr:nth-child(odd) {
+                background-color: rgba(15, 23, 42, 0.65);
+            }
+
+            .movies-table tbody tr:hover {
+                background-color: rgba(8, 47, 73, 0.95);
+                transform: translateY(-1px);
+                box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
+            }
+
+        .movies-table tbody td {
+            padding: 9px 10px;
+            border-top: 1px solid rgba(31, 41, 55, 0.95);
+            font-size: 13px;
+        }
+
+    .btn-primary {
+        padding: 9px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(34, 197, 94, 0.95);
+        background:
+            radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.85) 0, transparent 60%),
+            linear-gradient(135deg, #0b3d2e, #16a34a 40%, #22c55e 100%);
+        color: #ecfdf5;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow:
+            0 18px 40px rgba(5, 46, 22, 0.9),
+            0 0 0 2px rgba(2, 6, 23, 0.9);
+        transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.12s ease;
+        white-space: nowrap;
+    }
+
+        .btn-primary:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+            box-shadow:
+                0 22px 56px rgba(6, 78, 59, 0.95),
+                0 0 0 2px rgba(34, 197, 94, 0.95);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow:
+                0 10px 26px rgba(6, 78, 59, 0.9),
+                0 0 0 2px rgba(21, 128, 61, 0.95);
+        }
+
+        .btn-primary:disabled {
+            cursor: not-allowed;
+            filter: none;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(34, 197, 94, 0.12));
+            color: rgba(236, 253, 245, 0.7);
+            border-color: rgba(34, 197, 94, 0.35);
+            box-shadow: none;
+            transform: none;
+        }
+</style>

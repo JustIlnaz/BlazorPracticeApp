@@ -1,7 +1,6 @@
 using BlazorPracticeApp.Api.ContextDatabase;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.JWT;
-using BlazorPracticeApp.Api.Service;
 using BlazorPracticeApp.Api.Services;
 using Microsoft.EntityFrameworkCore;
 

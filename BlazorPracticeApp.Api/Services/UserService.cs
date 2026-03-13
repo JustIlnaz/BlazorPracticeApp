@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlazorPracticeApp.Api.Service
+namespace BlazorPracticeApp.Api.Services
 {
     public class UserService: IUserService
     {
@@ -196,7 +196,7 @@ namespace BlazorPracticeApp.Api.Service
             return new OkObjectResult(new
             {
                 status = true,
-                token = token,
+                token,
                 roleId = auth_user.RoleId,
                 name = auth_user.Name,
             });

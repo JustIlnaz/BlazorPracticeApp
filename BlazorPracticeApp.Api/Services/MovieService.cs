@@ -1,8 +1,7 @@
-﻿using BlazorPracticeApp.Api.ContextDatabase;
+using BlazorPracticeApp.Api.ContextDatabase;
 using BlazorPracticeApp.Api.DTOs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.Models;
-using BlazorPracticeApp.ApiRequest.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;

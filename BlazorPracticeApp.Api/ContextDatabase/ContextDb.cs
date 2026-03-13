@@ -1,4 +1,4 @@
-﻿using BlazorPracticeApp.Api.Models;
+using BlazorPracticeApp.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlazorPracticeApp.Api.ContextDatabase

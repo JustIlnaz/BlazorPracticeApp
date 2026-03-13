@@ -1,0 +1,339 @@
+@page "/movies/{Id:int}"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject ApiRequest Api
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<h2 class="movies-title">Информация о фильме</h2>
+
+@if (movie == null)
+{
+    <p class="text-muted">Загрузка...</p>
+}
+else
+{
+    <div class="movie-details-shell">
+        <div class="movie-details-main">
+            <h3 class="movie-name">@movie.Name</h3>
+            <p class="movie-genre">@movie.Genre</p>
+            <p class="movie-meta">
+                Дата выхода: <strong>@movie.ReleaseDate.ToString("dd.MM.yyyy")</strong> ·
+                Рейтинг: <strong>@movie.Rating</strong>
+            </p>
+            <p class="movie-description">@movie.Description</p>
+
+            <button class="btn-secondary" type="button" @onclick="BackToList">
+                К списку фильмов
+            </button>
+        </div>
+
+        <div class="movie-edit-shell">
+            <h4 class="movie-edit-title">Редактирование фильма</h4>
+
+            @if (!isAdmin)
+            {
+                <p class="text-muted">Редактирование доступно только администратору.</p>
+            }
+
+            <div class="form-group">
+                <label>Название</label>
+                <input @bind="editModel.Name" disabled="@(!isAdmin)" />
+            </div>
+
+            <div class="form-group">
+                <label>Жанр</label>
+                <input @bind="editModel.Genre" disabled="@(!isAdmin)" />
+            </div>
+
+            <div class="form-group">
+                <label>Дата выхода</label>
+                <InputDate @bind-Value="editModel.ReleaseDate" disabled="@(!isAdmin)" />
+            </div>
+
+            <div class="form-group">
+                <label>Рейтинг</label>
+                <InputNumber @bind-Value="editModel.Rating" disabled="@(!isAdmin)" />
+            </div>
+
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea @bind="editModel.Description" rows="3" disabled="@(!isAdmin)"></textarea>
+            </div>
+
+            <div class="movie-edit-buttons">
+                <button class="btn-primary"
+                        type="button"
+                        @onclick="Save"
+                        disabled="@(!isAdmin)"
+                        title="Доступно только администратору">
+                    Сохранить изменения
+                </button>
+                <button class="btn-danger"
+                        type="button"
+                        @onclick="Delete"
+                        disabled="@(!isAdmin)"
+                        title="Доступно только администратору">
+                    Удалить фильм
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(message))
+            {
+                <p class="text-muted">@message</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Movie? movie;
+    private Movie editModel = new Movie();
+    private bool isAdmin;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
+        isAdmin = role == "1";
+
+        var result = await Api.GetMovieById(Id);
+        if (result.status && result.list != null)
+        {
+            movie = result.list;
+            editModel = new Movie
+            {
+                Id = movie.Id,
+                Name = movie.Name,
+                Description = movie.Description,
+                Genre = movie.Genre,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating
+            };
+        }
+    }
+
+    private async Task Save()
+    {
+        if (!isAdmin)
+            return;
+
+        var token = await JS.InvokeAsync<string>("sessionStorage.getItem", "token");
+        if (string.IsNullOrEmpty(token))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        Api.SetToken(token);
+        var result = await Api.UpdateMovie(Id, editModel);
+        message = result.message;
+
+        if (result.status)
+        {
+            movie = new Movie
+            {
+                Id = editModel.Id,
+                Name = editModel.Name,
+                Description = editModel.Description,
+                Genre = editModel.Genre,
+                ReleaseDate = editModel.ReleaseDate,
+                Rating = editModel.Rating
+            };
+        }
+    }
+
+    private async Task Delete()
+    {
+        if (!isAdmin)
+            return;
+
+        var token = await JS.InvokeAsync<string>("sessionStorage.getItem", "token");
+        if (string.IsNullOrEmpty(token))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        Api.SetToken(token);
+        var result = await Api.DeleteMovie(Id);
+        message = result.message;
+
+        if (result.status)
+        {
+            Navigation.NavigateTo("/movies");
+        }
+    }
+
+    private void BackToList()
+    {
+        Navigation.NavigateTo("/movies");
+    }
+}
+
+<style>
+    .movie-details-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 16px;
+    }
+
+    
+
+    .movie-details-main {
+        border-radius: 18px;
+        padding: 14px 14px 12px;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
+            linear-gradient(145deg, #020617, #020617);
+        border: 1px solid rgba(31, 41, 55, 0.96);
+        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.96);
+        color: #e5e7eb;
+    }
+
+    .movie-name {
+        margin: 0 0 4px;
+        font-size: 22px;
+        font-weight: 600;
+        color: #f9fafb;
+    }
+
+    .movie-genre {
+        margin: 0 0 6px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: #9ca3af;
+    }
+
+    .movie-meta {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: #d1d5db;
+    }
+
+    .movie-description {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #e5e7eb;
+    }
+
+    .movie-edit-shell {
+        border-radius: 18px;
+        padding: 14px 14px 12px;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.18), transparent 55%),
+            linear-gradient(145deg, #020617, #020617);
+        border: 1px solid rgba(31, 41, 55, 0.96);
+        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.96);
+        color: #e5e7eb;
+    }
+
+    .movie-edit-title {
+        margin: 0 0 10px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.95);
+            background-color: #020617;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+
+    .movie-edit-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-primary {
+        background:
+            radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.85) 0, transparent 60%),
+            linear-gradient(135deg, #0b3d2e, #16a34a 40%, #22c55e 100%);
+        color: #ecfdf5;
+        border-color: rgba(34, 197, 94, 0.95);
+        box-shadow:
+            0 18px 40px rgba(5, 46, 22, 0.9),
+            0 0 0 2px rgba(2, 6, 23, 0.9);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.1));
+        border-color: rgba(148, 163, 184, 0.65);
+        color: #f9fafb;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.32), rgba(239, 68, 68, 0.16));
+        color: #fff1f2;
+        border-color: rgba(239, 68, 68, 0.75);
+        box-shadow: 0 0 0 2px rgba(2, 6, 23, 0.9);
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-danger:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:active,
+    .btn-secondary:active,
+    .btn-danger:active {
+        transform: translateY(0);
+        filter: brightness(1.02);
+    }
+
+    .btn-primary:disabled,
+    .btn-secondary:disabled,
+    .btn-danger:disabled {
+        cursor: not-allowed;
+        filter: none;
+        opacity: 0.55;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .text-muted {
+        color: #9ca3af;
+    }
+</style>
+

@@ -1,0 +1,199 @@
+@page "/movies/new"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject ApiRequest Api
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<h2 class="movies-title">Добавление фильма</h2>
+
+<div class="movie-edit-shell">
+    <div class="form-group">
+        <label>Название</label>
+        <input @bind="model.Name" />
+    </div>
+
+    <div class="form-group">
+        <label>Жанр</label>
+        <input @bind="model.Genre" />
+    </div>
+
+    <div class="form-group">
+        <label>Дата выхода</label>
+        <InputDate @bind-Value="model.ReleaseDate" />
+    </div>
+
+    <div class="form-group">
+        <label>Рейтинг</label>
+        <InputNumber @bind-Value="model.Rating" />
+    </div>
+
+    <div class="form-group">
+        <label>Описание</label>
+        <textarea @bind="model.Description" rows="3"></textarea>
+    </div>
+
+    <div class="movie-edit-buttons">
+        <button class="btn-primary" type="button" @onclick="Save">
+            Добавить фильм
+        </button>
+        <button class="btn-secondary" type="button" @onclick="BackToList">
+            Отмена
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <p class="text-muted">@message</p>
+    }
+</div>
+
+@code {
+    private Movie model = new Movie
+    {
+        ReleaseDate = DateTime.Today,
+        Rating = 0
+    };
+
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
+        if (role != "1")
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(model.Name) ||
+            string.IsNullOrWhiteSpace(model.Genre))
+        {
+            message = "Заполните обязательные поля: Название и Жанр.";
+            return;
+        }
+
+        var token = await JS.InvokeAsync<string>("sessionStorage.getItem", "token");
+        if (string.IsNullOrEmpty(token))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        Api.SetToken(token);
+        var result = await Api.CreateMovie(model);
+        message = result.message;
+
+        if (result.status)
+        {
+            Navigation.NavigateTo("/movies");
+        }
+    }
+
+    private void BackToList()
+    {
+        Navigation.NavigateTo("/movies");
+    }
+}
+
+<style>
+    .movies-title {
+        margin: 0 0 14px;
+        font-size: 24px;
+        font-weight: 600;
+        color: #f9fafb;
+    }
+
+    .movie-edit-shell {
+        border-radius: 18px;
+        padding: 14px 14px 12px;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.18), transparent 55%),
+            linear-gradient(145deg, #020617, #020617);
+        border: 1px solid rgba(31, 41, 55, 0.96);
+        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.96);
+        color: #e5e7eb;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.95);
+            background-color: #020617;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+
+    .movie-edit-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-primary {
+        background:
+            radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.85) 0, transparent 60%),
+            linear-gradient(135deg, #0b3d2e, #16a34a 40%, #22c55e 100%);
+        color: #ecfdf5;
+        border-color: rgba(34, 197, 94, 0.95);
+        box-shadow:
+            0 18px 40px rgba(5, 46, 22, 0.9),
+            0 0 0 2px rgba(2, 6, 23, 0.9);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.1));
+        border-color: rgba(148, 163, 184, 0.65);
+        color: #f9fafb;
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:active,
+    .btn-secondary:active {
+        transform: translateY(0);
+        filter: brightness(1.02);
+    }
+
+    .text-muted {
+        color: #9ca3af;
+    }
+</style>
+

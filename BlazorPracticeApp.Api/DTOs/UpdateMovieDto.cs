@@ -1,4 +1,4 @@
-﻿namespace BlazorPracticeApp.Api.DTOs
+namespace BlazorPracticeApp.Api.DTOs
 {
     public class UpdateMovieDto
     {
