@@ -18,6 +18,21 @@ namespace BlazorPracticeApp.Api.Services
             context = _context;
         }
 
+        private static DateTime ToUtc(DateTime value)
+        {
+            if (value.Kind == DateTimeKind.Utc)
+            {
+                return value;
+
+            }
+
+            if (value.Kind == DateTimeKind.Unspecified)
+            {
+                return DateTime.SpecifyKind(value, DateTimeKind.Utc);
+            }
+            return value.ToUniversalTime();
+        }
+
         public async Task<IActionResult> GetAllMovies()
         {
             var movies = await context.Movies.ToListAsync();
@@ -62,7 +77,7 @@ namespace BlazorPracticeApp.Api.Services
                     Name = newMovie.Name,
                     Description = newMovie.Description,
                     Genre = newMovie.Genre,
-                    ReleaseDate = newMovie.ReleaseDate,
+                    ReleaseDate = ToUtc(newMovie.ReleaseDate),
                     Rating = newMovie.Rating,
                 };
 
@@ -116,7 +131,7 @@ namespace BlazorPracticeApp.Api.Services
             movie.Name = updateMovie.Name;
             movie.Description = updateMovie.Description;
             movie.Genre = updateMovie.Genre;
-            movie.ReleaseDate = updateMovie.ReleaseDate;
+            movie.ReleaseDate = ToUtc(updateMovie.ReleaseDate);
             movie.Rating = updateMovie.Rating;
 
             await context.SaveChangesAsync();

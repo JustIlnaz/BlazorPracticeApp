@@ -18,7 +18,7 @@
             <label>Жанр</label>
             <select @bind="selectedGenre">
                 <option value="">Все жанры</option>
-                @foreach (var genre in Genres)
+                @foreach (var genre in GetGenres())
                 {
                     <option value="@genre">@genre</option>
                 }
@@ -62,7 +62,7 @@
                         <td colspan="4" class="text-muted text-center">Загрузка...</td>
                     </tr>
                 }
-                else if (!FilteredMovies.Any())
+                else if (!GetFilteredMovies().Any())
                 {
                     <tr>
                         <td colspan="4" class="text-muted text-center">Фильмы не найдены</td>
@@ -70,7 +70,7 @@
                 }
                 else
                 {
-                    @foreach (var movie in FilteredMovies)
+                    @foreach (var movie in GetFilteredMovies())
                     {
                         <tr @onclick="() => OpenDetails(movie.Id)">
                             <td>@movie.Name</td>
@@ -92,46 +92,72 @@
     private string sortOption = "date_desc";
     private bool isAdmin;
 
-    private IEnumerable<string> Genres =>
-        movies?
+    private List<string> GetGenres()
+    {
+        if (movies == null)
+            return new List<string>();
+
+        return movies
             .Where(m => !string.IsNullOrWhiteSpace(m.Genre))
             .Select(m => m.Genre!)
             .Distinct()
-            .OrderBy(g => g) ?? Enumerable.Empty<string>();
+            .OrderBy(g => g)
+            .ToList();
+    }
 
-    private IEnumerable<Movie> FilteredMovies
+    private List<Movie> GetFilteredMovies()
     {
-        get
+        if (movies == null)
         {
-            if (movies == null)
-                return Enumerable.Empty<Movie>();
-
-            IEnumerable<Movie> query = movies;
-
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                var term = searchTerm.Trim().ToLower();
-                query = query.Where(m =>
-                    (!string.IsNullOrEmpty(m.Name) && m.Name.ToLower().Contains(term)) ||
-                    (!string.IsNullOrEmpty(m.Description) && m.Description.ToLower().Contains(term)));
-            }
-
-            if (!string.IsNullOrWhiteSpace(selectedGenre))
-            {
-                query = query.Where(m => string.Equals(m.Genre, selectedGenre, StringComparison.OrdinalIgnoreCase));
-            }
-
-            query = sortOption switch
-            {
-                "name" => query.OrderBy(m => m.Name),
-                "rating_desc" => query.OrderByDescending(m => m.Rating),
-                "rating_asc" => query.OrderBy(m => m.Rating),
-                "date_asc" => query.OrderBy(m => m.ReleaseDate),
-                _ => query.OrderByDescending(m => m.ReleaseDate),
-            };
-
-            return query.ToList();
+            return new List<Movie>();
         }
+
+        var result = movies.ToList();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim().ToLower();
+
+            result = result
+                .Where(m =>
+                    (!string.IsNullOrEmpty(m.Name) && m.Name.ToLower().Contains(term)) ||
+                    (!string.IsNullOrEmpty(m.Description) && m.Description.ToLower().Contains(term)))
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedGenre))
+        {
+            var genre = selectedGenre.Trim().ToLower();
+
+            result = result
+                .Where(m =>
+                    !string.IsNullOrWhiteSpace(m.Genre) &&
+                    m.Genre!.Trim().ToLower() == genre)
+                .ToList();
+        }
+
+        if (sortOption == "name")
+        {
+            result = result.OrderBy(m => m.Name).ToList();
+        }
+        else if (sortOption == "rating_desc")
+        {
+            result = result.OrderByDescending(m => m.Rating).ToList();
+        }
+        else if (sortOption == "rating_asc")
+        {
+            result = result.OrderBy(m => m.Rating).ToList();
+        }
+        else if (sortOption == "date_asc")
+        {
+            result = result.OrderBy(m => m.ReleaseDate).ToList();
+        }
+        else
+        {
+            result = result.OrderByDescending(m => m.ReleaseDate).ToList();
+        }
+
+        return result;
     }
 
     protected override async Task OnInitializedAsync()
@@ -177,9 +203,7 @@
         gap: 10px 16px;
         padding: 10px 12px;
         border-radius: 16px;
-        background:
-            radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16), transparent 55%),
-            linear-gradient(135deg, #020617, #020617);
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16), transparent 55%), linear-gradient(135deg, #020617, #020617);
         border: 1px solid rgba(31, 41, 55, 0.95);
     }
 
@@ -211,8 +235,7 @@
 
     .movies-table-shell {
         border-radius: 18px;
-        background:
-            radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+        background: radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
         border: 1px solid rgba(31, 41, 55, 0.95);
         padding: 12px 12px 10px;
         box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95);
@@ -264,18 +287,14 @@
         padding: 9px 16px;
         border-radius: 999px;
         border: 1px solid rgba(34, 197, 94, 0.95);
-        background:
-            radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.85) 0, transparent 60%),
-            linear-gradient(135deg, #0b3d2e, #16a34a 40%, #22c55e 100%);
+        background: radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.85) 0, transparent 60%), linear-gradient(135deg, #0b3d2e, #16a34a 40%, #22c55e 100%);
         color: #ecfdf5;
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         cursor: pointer;
-        box-shadow:
-            0 18px 40px rgba(5, 46, 22, 0.9),
-            0 0 0 2px rgba(2, 6, 23, 0.9);
+        box-shadow: 0 18px 40px rgba(5, 46, 22, 0.9), 0 0 0 2px rgba(2, 6, 23, 0.9);
         transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.12s ease;
         white-space: nowrap;
     }
@@ -283,16 +302,12 @@
         .btn-primary:hover {
             filter: brightness(1.08);
             transform: translateY(-1px);
-            box-shadow:
-                0 22px 56px rgba(6, 78, 59, 0.95),
-                0 0 0 2px rgba(34, 197, 94, 0.95);
+            box-shadow: 0 22px 56px rgba(6, 78, 59, 0.95), 0 0 0 2px rgba(34, 197, 94, 0.95);
         }
 
         .btn-primary:active {
             transform: translateY(0);
-            box-shadow:
-                0 10px 26px rgba(6, 78, 59, 0.9),
-                0 0 0 2px rgba(21, 128, 61, 0.95);
+            box-shadow: 0 10px 26px rgba(6, 78, 59, 0.9), 0 0 0 2px rgba(21, 128, 61, 0.95);
         }
 
         .btn-primary:disabled {

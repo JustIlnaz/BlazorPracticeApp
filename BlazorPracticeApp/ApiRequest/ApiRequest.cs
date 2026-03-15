@@ -201,7 +201,16 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var response = await httpClient.PostAsJsonAsync(url, movie);
+            var dto = new
+            {
+                Name = movie.Name,
+                Description = movie.Description,
+                Genre = movie.Genre,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating
+            };
+
+            var response = await httpClient.PostAsJsonAsync(url, dto);
             var result = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)

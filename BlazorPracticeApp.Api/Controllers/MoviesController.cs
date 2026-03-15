@@ -18,13 +18,11 @@ namespace BlazorPracticeApp.Api.Controllers
         }
 
         [HttpGet]
-        // GET /api/movies
         public async Task<IActionResult> GetMovies()
         {
             return await service.GetAllMovies();
         }
 
-        // GET /api/movies/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMovieId(int id)
         {
@@ -32,7 +30,6 @@ namespace BlazorPracticeApp.Api.Controllers
         }
 
 
-        // POST /api/movies
         [HttpPost]
         [RoleAutorizeAttribute([1])]
         public async Task<IActionResult> CreateNewMovie(NewMovieDto newMovieDto)
@@ -41,7 +38,6 @@ namespace BlazorPracticeApp.Api.Controllers
         }
 
 
-        // PUT /api/movies/{id}
         [HttpPut("{id}")]
         [RoleAutorizeAttribute([1])]
         public async Task<IActionResult> UpdateMovie(int id, UpdateMovieDto updateMovieDto)
@@ -49,7 +45,6 @@ namespace BlazorPracticeApp.Api.Controllers
             return await service.UpdateMovie(id, updateMovieDto);
         }
 
-        // DELETE /api/movies/{id}
         [HttpDelete("{id}")]
         [RoleAutorizeAttribute([1])]
         public async Task<IActionResult> DeleteMovie(int id)
