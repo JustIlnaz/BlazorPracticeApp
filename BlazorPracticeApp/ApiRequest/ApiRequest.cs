@@ -201,32 +201,10 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var dto = new
-            {
-                Name = movie.Name,
-                Description = movie.Description,
-                Genre = movie.Genre,
-                ReleaseDate = movie.ReleaseDate,
-                Rating = movie.Rating
-            };
-
-            var response = await httpClient.PostAsJsonAsync(url, dto);
-            var result = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new MovieActionResult
-                {
-                    status = false,
-                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
-                };
-            }
-
-            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(
-                result,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            return deserializeResult ?? new MovieActionResult { status = false };
+            var responce = await httpClient.PostAsJsonAsync(url, movie);
+            var result = await responce.Content.ReadAsStringAsync();
+            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(result);
+            return deserializeResult ?? new MovieActionResult();
         }
 
         public async Task<MovieActionResult> UpdateMovie(int id, Movie movie)
@@ -239,23 +217,10 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var response = await httpClient.PutAsJsonAsync(url, movie);
-            var result = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new MovieActionResult
-                {
-                    status = false,
-                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
-                };
-            }
-
-            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(
-                result,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            return deserializeResult ?? new MovieActionResult { status = false };
+            var responce = await httpClient.PutAsJsonAsync(url, movie);
+            var result = await responce.Content.ReadAsStringAsync();
+            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(result);
+            return deserializeResult ?? new MovieActionResult();
         }
 
         public async Task<MovieActionResult> DeleteMovie(int id)
@@ -268,25 +233,13 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var response = await httpClient.DeleteAsync(url);
-            var result = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new MovieActionResult
-                {
-                    status = false,
-                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
-                };
-            }
-
-            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(
-                result,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            return deserializeResult ?? new MovieActionResult { status = false };
+            var responce = await httpClient.DeleteAsync(url);
+            var result = await responce.Content.ReadAsStringAsync();
+            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(result);
+            return deserializeResult ?? new MovieActionResult();
         }
 
     }
 }
 
+    
