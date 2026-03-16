@@ -8,8 +8,10 @@ namespace BlazorPracticeApp.Api.Models
         public int Id { get; set; }
         public string? Name {  get; set; }
         public string? Description  { get; set; }
-        public string? Genre { get; set; }
+        public int GenreId { get; set; }
+        public Genre Genre { get; set; } = null!;
         public DateTime ReleaseDate { get; set; }
         public float Rating { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }   

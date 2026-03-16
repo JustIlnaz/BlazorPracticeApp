@@ -43,6 +43,8 @@
                 title="Доступно только администратору">
             Добавить фильм
         </button>
+
+
     </section>
 
     <section class="movies-table-shell">
@@ -95,14 +97,11 @@
     private List<string> GetGenres()
     {
         if (movies == null)
+        {
             return new List<string>();
+        }
 
-        return movies
-            .Where(m => !string.IsNullOrWhiteSpace(m.Genre))
-            .Select(m => m.Genre!)
-            .Distinct()
-            .OrderBy(g => g)
-            .ToList();
+        return movies.Where(m => !string.IsNullOrWhiteSpace(m.Genre)).Select(m => m.Genre!).Distinct().OrderBy(g => g).ToList();
     }
 
     private List<Movie> GetFilteredMovies()
@@ -118,22 +117,14 @@
         {
             var term = searchTerm.Trim().ToLower();
 
-            result = result
-                .Where(m =>
-                    (!string.IsNullOrEmpty(m.Name) && m.Name.ToLower().Contains(term)) ||
-                    (!string.IsNullOrEmpty(m.Description) && m.Description.ToLower().Contains(term)))
-                .ToList();
+            result = result.Where(m => (!string.IsNullOrEmpty(m.Name) && m.Name.ToLower().Contains(term)) || (!string.IsNullOrEmpty(m.Description) && m.Description.ToLower().Contains(term))).ToList();
         }
 
         if (!string.IsNullOrWhiteSpace(selectedGenre))
         {
             var genre = selectedGenre.Trim().ToLower();
 
-            result = result
-                .Where(m =>
-                    !string.IsNullOrWhiteSpace(m.Genre) &&
-                    m.Genre!.Trim().ToLower() == genre)
-                .ToList();
+            result = result.Where(m =>!string.IsNullOrWhiteSpace(m.Genre) && m.Genre!.Trim().ToLower() == genre).ToList();
         }
 
         if (sortOption == "name")
@@ -177,7 +168,9 @@
     private void GoToCreateMovie()
     {
         if (!isAdmin)
+        {
             return;
+        }
 
         Navigation.NavigateTo("/movies/new");
     }

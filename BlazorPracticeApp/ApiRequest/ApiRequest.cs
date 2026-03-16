@@ -168,6 +168,59 @@ namespace BlazorPracticeApp.ApiRequest
             return deserializeResult ?? new MoviesListResult { status = false, list = new List<Movie>() };
         }
 
+        public async Task<GenresListResult> GetGenres()
+        {
+            var url = "/api/genres";
+
+            var response = await httpClient.GetAsync(url);
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new GenresListResult
+                {
+                    status = false,
+                    list = new List<string>(),
+                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<GenresListResult>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new GenresListResult { status = false, list = new List<string>() };
+        }
+
+        public async Task<GenreActionResult> CreateGenre(string name)
+        {
+            var url = "/api/genres";
+
+            if (string.IsNullOrEmpty(token))
+                throw new Exception("Нет токена");
+
+            httpClient.DefaultRequestHeaders.Remove("Authorization");
+            httpClient.DefaultRequestHeaders.Add("Authorization", token);
+
+            var response = await httpClient.PostAsJsonAsync(url, new { name });
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new GenreActionResult
+                {
+                    status = false,
+                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<GenreActionResult>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new GenreActionResult { status = false, message = "Не удалось прочитать ответ сервера" };
+        }
+
         public async Task<MovieItemResult> GetMovieById(int id)
         {
             var url = $"/api/movies/{id}";
@@ -201,10 +254,33 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var responce = await httpClient.PostAsJsonAsync(url, movie);
-            var result = await responce.Content.ReadAsStringAsync();
-            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(result);
-            return deserializeResult ?? new MovieActionResult();
+            var response = await httpClient.PostAsJsonAsync(url, movie);
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new MovieActionResult
+                {
+                    status = false,
+                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
+                };
+            }
+
+            var trimmed = result.TrimStart();
+            if (string.IsNullOrWhiteSpace(result) || trimmed[0] != '{')
+            {
+                return new MovieActionResult
+                {
+                    status = false,
+                    message = "Некорректный ответ сервера"
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new MovieActionResult { status = false, message = "Не удалось прочитать ответ сервера" };
         }
 
         public async Task<MovieActionResult> UpdateMovie(int id, Movie movie)
@@ -217,10 +293,33 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var responce = await httpClient.PutAsJsonAsync(url, movie);
-            var result = await responce.Content.ReadAsStringAsync();
-            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(result);
-            return deserializeResult ?? new MovieActionResult();
+            var response = await httpClient.PutAsJsonAsync(url, movie);
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new MovieActionResult
+                {
+                    status = false,
+                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
+                };
+            }
+
+            var trimmed = result.TrimStart();
+            if (string.IsNullOrWhiteSpace(result) || trimmed[0] != '{')
+            {
+                return new MovieActionResult
+                {
+                    status = false,
+                    message = "Некорректный ответ сервера"
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new MovieActionResult { status = false, message = "Не удалось прочитать ответ сервера" };
         }
 
         public async Task<MovieActionResult> DeleteMovie(int id)
@@ -233,10 +332,33 @@ namespace BlazorPracticeApp.ApiRequest
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
-            var responce = await httpClient.DeleteAsync(url);
-            var result = await responce.Content.ReadAsStringAsync();
-            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(result);
-            return deserializeResult ?? new MovieActionResult();
+            var response = await httpClient.DeleteAsync(url);
+            var result = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new MovieActionResult
+                {
+                    status = false,
+                    message = $"Ошибка сервера: {(int)response.StatusCode} {response.StatusCode}"
+                };
+            }
+
+            var trimmed = result.TrimStart();
+            if (string.IsNullOrWhiteSpace(result) || trimmed[0] != '{')
+            {
+                return new MovieActionResult
+                {
+                    status = false,
+                    message = "Некорректный ответ сервера"
+                };
+            }
+
+            var deserializeResult = JsonSerializer.Deserialize<MovieActionResult>(
+                result,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return deserializeResult ?? new MovieActionResult { status = false, message = "Не удалось прочитать ответ сервера" };
         }
 
     }

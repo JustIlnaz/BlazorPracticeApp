@@ -1,55 +1,24 @@
-@page "/movies/new"
+@page "/genres/new"
 @using BlazorPracticeApp.ApiRequest
-@using BlazorPracticeApp.ApiRequest.Models
 @inject ApiRequest Api
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 
-<h2 class="movies-title">Добавление фильма</h2>
+<h2 class="movies-title">Добавление жанра</h2>
 
 <div class="movie-edit-shell">
     <div class="form-group">
-        <label>Название</label>
-        <input @bind="model.Name" />
-    </div>
-
-    <div class="form-group">
-        <label>Жанр</label>
-        <select @bind="model.Genre">
-            <option value="" disabled selected hidden>Выберите жанр</option>
-            @foreach (var genre in genres)
-            {
-                <option value="@genre">@genre</option>
-            }
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Дата выхода</label>
-        <InputDate @bind-Value="model.ReleaseDate" />
-    </div>
-
-    <div class="form-group">
-        <label>Рейтинг</label>
-        <InputNumber @bind-Value="model.Rating" min="1" max="5" step="0.1" />
-    </div>
-
-    <div class="form-group">
-        <label>Описание</label>
-        <textarea @bind="model.Description" rows="3"></textarea>
+        <label>Название жанра</label>
+        <input @bind="name" />
     </div>
 
     <div class="movie-edit-buttons">
         <button class="btn-primary" type="button" @onclick="Save">
-            Добавить фильм
-        </button>
-
-        <button class="btn-primary" type="button" @onclick="GoToAddGenre">
             Добавить жанр
         </button>
 
-        <button class="btn-secondary" type="button" @onclick="BackToList">
-            Отмена
+        <button class="btn-secondary" type="button" @onclick="Back">
+            Назад
         </button>
     </div>
 
@@ -60,13 +29,7 @@
 </div>
 
 @code {
-    private Movie model = new Movie
-    {
-        ReleaseDate = DateTime.Today,
-        Rating = 1
-    };
-
-    private List<string> genres = new();
+    private string name = string.Empty;
     private string? message;
 
     protected override async Task OnInitializedAsync()
@@ -77,17 +40,14 @@
             Navigation.NavigateTo("/");
             return;
         }
-
-        var genresResult = await Api.GetGenres();
-        genres = genresResult.list ?? new List<string>();
     }
 
     private async Task Save()
-    {
-        if (string.IsNullOrWhiteSpace(model.Name) ||
-            string.IsNullOrWhiteSpace(model.Genre))
+    {   
+        name = (name ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(name))
         {
-            message = "Заполните обязательные поля: Название и Жанр.";
+            message = "Введите название жанра.";
             return;
         }
 
@@ -99,23 +59,18 @@
         }
 
         Api.SetToken(token);
-        var result = await Api.CreateMovie(model);
+        var result = await Api.CreateGenre(name);
         message = result.message;
 
         if (result.status)
         {
-            Navigation.NavigateTo("/movies");
+            Navigation.NavigateTo("/movies/new");
         }
     }
 
-    private void GoToAddGenre()
+    private void Back()
     {
-        Navigation.NavigateTo("/genres/new?returnUrl=/movies/new");
-    }
-
-    private void BackToList()
-    {
-        Navigation.NavigateTo("/movies");
+        Navigation.NavigateTo("/movies/new");
     }
 }
 
@@ -153,9 +108,7 @@
             color: #9ca3af;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group input {
             padding: 8px 10px;
             border-radius: 10px;
             border: 1px solid rgba(55, 65, 81, 0.95);

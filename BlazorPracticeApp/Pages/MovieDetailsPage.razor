@@ -87,7 +87,7 @@ else
 }
 
 @code {
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
 
     private Movie? movie;
     private Movie editModel = new Movie();
@@ -118,7 +118,9 @@ else
     private async Task Save()
     {
         if (!isAdmin)
+        {
             return;
+        }
 
         var token = await JS.InvokeAsync<string>("sessionStorage.getItem", "token");
         if (string.IsNullOrEmpty(token))
@@ -180,7 +182,7 @@ else
         gap: 16px;
     }
 
-    
+
 
     .movie-details-main {
         border-radius: 18px;

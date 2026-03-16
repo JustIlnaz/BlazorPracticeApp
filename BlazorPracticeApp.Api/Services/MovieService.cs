@@ -3,9 +3,7 @@ using BlazorPracticeApp.Api.DTOs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
-using System.Net.NetworkInformation;
 
 namespace BlazorPracticeApp.Api.Services
 {
@@ -35,18 +33,34 @@ namespace BlazorPracticeApp.Api.Services
 
         public async Task<IActionResult> GetAllMovies()
         {
-            var movies = await context.Movies.ToListAsync();
+            var movies = await context.Movies
+                .Include(m => m.Genre)
+                .ToListAsync();
+
+            var list = movies.Select(m => new
+            {
+                m.Id,
+                m.Name,
+                m.Description,
+                Genre = m.Genre.NameGenre,
+                m.ReleaseDate,
+                m.Rating,
+                m.ImageUrl
+            }).ToList();
+
             return new OkObjectResult(new
             {
                 status = true,
-                list = movies
+                list
             });
         }
 
 
         public async Task<IActionResult> GetMovieById(int id)
         {
-            var movie = await context.Movies.FindAsync(id);
+            var movie = await context.Movies
+                .Include(m => m.Genre)
+                .FirstOrDefaultAsync(m => m.Id == id);
            
             if (movie == null)
             {
@@ -60,7 +74,16 @@ namespace BlazorPracticeApp.Api.Services
             return new OkObjectResult(new
             {
                 status = true,
-                list = movie
+                list = new
+                {
+                    movie.Id,
+                    movie.Name,
+                    movie.Description,
+                    Genre = movie.Genre.NameGenre,
+                    movie.ReleaseDate,
+                    movie.Rating,
+                    movie.ImageUrl
+                }
             });
             
         }
@@ -72,13 +95,33 @@ namespace BlazorPracticeApp.Api.Services
 
             if (movieName == null)
             {
+                if (string.IsNullOrWhiteSpace(newMovie.Genre))
+                {
+                    return new OkObjectResult(new
+                    {
+                        status = false,
+                        message = "Жанр обязателен"
+                    });
+                }
+
+                var genre = await context.Genres.FirstOrDefaultAsync(g => g.NameGenre == newMovie.Genre);
+                if (genre == null)
+                {
+                    return new OkObjectResult(new
+                    {
+                        status = false,
+                        message = "Такого жанра не существует. Сначала добавьте жанр."
+                    });
+                }
+
                 var movie = new Movie()
                 {
                     Name = newMovie.Name,
                     Description = newMovie.Description,
-                    Genre = newMovie.Genre,
+                    GenreId = genre.Id,
                     ReleaseDate = ToUtc(newMovie.ReleaseDate),
                     Rating = newMovie.Rating,
+                    ImageUrl = newMovie.ImageUrl
                 };
 
                 await context.Movies.AddAsync(movie);
@@ -128,11 +171,26 @@ namespace BlazorPracticeApp.Api.Services
                 });
             }
 
+            if (!string.IsNullOrWhiteSpace(updateMovie.Genre))
+            {
+                var genre = await context.Genres.FirstOrDefaultAsync(g => g.NameGenre == updateMovie.Genre);
+                if (genre == null)
+                {
+                    return new OkObjectResult(new
+                    {
+                        status = false,
+                        message = "Такого жанра не существует. Сначала добавьте жанр."
+                    });
+                }
+
+                movie.GenreId = genre.Id;
+            }
+
             movie.Name = updateMovie.Name;
             movie.Description = updateMovie.Description;
-            movie.Genre = updateMovie.Genre;
             movie.ReleaseDate = ToUtc(updateMovie.ReleaseDate);
             movie.Rating = updateMovie.Rating;
+            movie.ImageUrl = updateMovie.ImageUrl;
 
             await context.SaveChangesAsync();
 

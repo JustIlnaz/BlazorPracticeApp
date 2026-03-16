@@ -8,6 +8,7 @@ namespace BlazorPracticeApp.ApiRequest.Models
         public string? Genre { get; set; }
         public DateTime ReleaseDate { get; set; }
         public float Rating { get; set; }
+        public string? ImageUrl { get; set; }
     }
 
     public class MoviesListResult

@@ -12,6 +12,7 @@ namespace BlazorPracticeApp.Api.ContextDatabase
         public DbSet<Session> Sessions { get; set; }
 
         public DbSet<Movie> Movies { get; set; }
+        public DbSet<Genre> Genres { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

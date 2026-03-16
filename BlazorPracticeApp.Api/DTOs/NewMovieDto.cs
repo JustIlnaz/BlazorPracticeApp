@@ -7,5 +7,6 @@ namespace BlazorPracticeApp.Api.DTOs
         public string? Genre { get; set; }
         public DateTime ReleaseDate { get; set; }
         public float Rating { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }
