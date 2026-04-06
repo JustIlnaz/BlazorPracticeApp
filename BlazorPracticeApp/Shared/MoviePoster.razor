@@ -1,0 +1,44 @@
+@inject NavigationManager Navigation
+
+<img src="@_src"
+     alt="@Alt"
+     class="@CssClass"
+     width="@Width"
+     height="@Height"
+     @onerror="OnError" />
+
+@code {
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string Alt { get; set; } = "";
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public int? Width { get; set; }
+    [Parameter] public int? Height { get; set; }
+
+    private string _src = "";
+    private string? _lastKey;
+
+    private string PlaceholderAbsolute =>
+        $"{Navigation.BaseUri.TrimEnd('/')}/images/placeholder.png";
+
+    protected override void OnParametersSet()
+    {
+        var key = ImageUrl ?? string.Empty;
+        if (key != _lastKey)
+        {
+            _lastKey = key;
+            var u = ImageUrl?.Trim();
+            _src = string.IsNullOrEmpty(u) ? PlaceholderAbsolute : u;
+        }
+    }
+
+    private void OnError()
+    {
+        if (_src == PlaceholderAbsolute)
+        {
+            return;
+        }
+
+        _src = PlaceholderAbsolute;
+        StateHasChanged();
+    }
+}

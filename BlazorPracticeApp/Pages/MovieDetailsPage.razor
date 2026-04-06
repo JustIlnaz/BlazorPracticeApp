@@ -15,17 +15,28 @@ else
 {
     <div class="movie-details-shell">
         <div class="movie-details-main">
-            <h3 class="movie-name">@movie.Name</h3>
-            <p class="movie-genre">@movie.Genre</p>
-            <p class="movie-meta">
-                Дата выхода: <strong>@movie.ReleaseDate.ToString("dd.MM.yyyy")</strong> ·
-                Рейтинг: <strong>@movie.Rating</strong>
-            </p>
-            <p class="movie-description">@movie.Description</p>
+            <div class="movie-details-hero">
+                <figure class="movie-poster">
+                    <MoviePoster ImageUrl="@movie.ImageUrl"
+                                 Alt="@(movie.Name ?? "")"
+                                 CssClass="movie-poster__img"
+                                 Width="200"
+                                 Height="300" />
+                </figure>
+                <div class="movie-details-hero__text">
+                    <h3 class="movie-name">@movie.Name</h3>
+                    <p class="movie-genre">@movie.Genre</p>
+                    <p class="movie-meta">
+                        Дата выхода: <strong>@movie.ReleaseDate.ToString("dd.MM.yyyy")</strong> ·
+                        Рейтинг: <strong>@movie.Rating</strong>
+                    </p>
+                    <p class="movie-description">@movie.Description</p>
 
-            <button class="btn-secondary" type="button" @onclick="BackToList">
-                К списку фильмов
-            </button>
+                    <button class="btn-secondary" type="button" @onclick="BackToList">
+                        К списку фильмов
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="movie-edit-shell">
@@ -110,7 +121,8 @@ else
                 Description = movie.Description,
                 Genre = movie.Genre,
                 ReleaseDate = movie.ReleaseDate,
-                Rating = movie.Rating
+                Rating = movie.Rating,
+                ImageUrl = movie.ImageUrl
             };
         }
     }
@@ -142,7 +154,8 @@ else
                 Description = editModel.Description,
                 Genre = editModel.Genre,
                 ReleaseDate = editModel.ReleaseDate,
-                Rating = editModel.Rating
+                Rating = editModel.Rating,
+                ImageUrl = editModel.ImageUrl
             };
         }
     }
@@ -191,6 +204,34 @@ else
         border: 1px solid rgba(31, 41, 55, 0.96);
         box-shadow: 0 26px 70px rgba(0, 0, 0, 0.96);
         color: #e5e7eb;
+    }
+
+    .movie-details-hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .movie-poster {
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .movie-poster__img {
+        display: block;
+        width: 200px;
+        height: auto;
+        max-height: 300px;
+        object-fit: cover;
+        border-radius: 14px;
+        border: 1px solid rgba(55, 65, 81, 0.95);
+        background: #0f172a;
+    }
+
+    .movie-details-hero__text {
+        flex: 1;
+        min-width: 0;
     }
 
     .movie-name {
