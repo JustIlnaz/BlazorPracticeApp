@@ -32,9 +32,14 @@ else
                     </p>
                     <p class="movie-description">@movie.Description</p>
 
-                    <button class="btn-secondary" type="button" @onclick="BackToList">
-                        К списку фильмов
-                    </button>
+                    <div class="movie-hero-actions">
+                        <button class="btn-secondary" type="button" @onclick="BackToList">
+                            К списку фильмов
+                        </button>
+                        <button class="btn-secondary" type="button" @onclick="GoMovieChat">
+                            Чат о фильме
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -186,6 +191,11 @@ else
     {
         Navigation.NavigateTo("/movies");
     }
+
+    private void GoMovieChat()
+    {
+        Navigation.NavigateTo($"/chat/movie/{Id}");
+    }
 }
 
 <style>
@@ -211,6 +221,13 @@ else
         flex-wrap: wrap;
         gap: 16px;
         align-items: flex-start;
+    }
+
+    .movie-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
     }
 
     .movie-poster {

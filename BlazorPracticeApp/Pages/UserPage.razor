@@ -13,6 +13,10 @@
         <div class="user-shell__info">
             <p class="user-shell__label">Профиль</p>
             <h3 class="user-shell__title">@name</h3>
+            @if (userId.HasValue)
+            {
+                <p class="user-shell__id">Ваш ID для личных чатов: <strong>@userId</strong></p>
+            }
         </div>
         <button class="btn-primary" type="button" @onclick="Logout">
             Выход
@@ -23,7 +27,9 @@
         <button class="btn-secondary" type="button" @onclick="GoToMovies">
             К фильмам
         </button>
-        
+        <button class="btn-secondary" type="button" @onclick="GoToChats">
+            Чаты
+        </button>
     </div>
 </div>
 
@@ -32,22 +38,36 @@
 {
     public string? name { get; set; }
     private bool isAdmin;
+    private int? userId;
 
     protected override async Task OnInitializedAsync()
     {
         var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
         isAdmin = role == "1";
+
+        name = await JS.InvokeAsync<string>("sessionStorage.getItem", "userName");
+        var uidStr = await JS.InvokeAsync<string>("sessionStorage.getItem", "userId");
+        if (int.TryParse(uidStr, out var uid) && uid > 0)
+            userId = uid;
     }
     
     public async Task Logout()
     {
         await JS.InvokeAsync<string>("sessionStorage.removeItem", "token");
+        await JS.InvokeAsync<string>("sessionStorage.removeItem", "userId");
+        await JS.InvokeAsync<string>("sessionStorage.removeItem", "userName");
+        await JS.InvokeAsync<string>("sessionStorage.removeItem", "role");
         navigation.NavigateTo("/");
     }
 
     private void GoToMovies()
     {
         navigation.NavigateTo("/movies");
+    }
+
+    private void GoToChats()
+    {
+        navigation.NavigateTo("/chat");
     }
 
     private void GoToNewMovie()
@@ -128,6 +148,12 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+    }
+
+    .user-shell__id {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #a7f3d0;
     }
 
     .btn-primary {

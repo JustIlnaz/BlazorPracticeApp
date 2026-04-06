@@ -11,7 +11,7 @@ namespace BlazorPracticeApp.ApiRequest
         private string? token;
             
         public ApiRequest(HttpClient _httpClient)
-        {
+        {   
             httpClient = _httpClient;
         }
 
@@ -359,6 +359,54 @@ namespace BlazorPracticeApp.ApiRequest
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             return deserializeResult ?? new MovieActionResult { status = false, message = "Не удалось прочитать ответ сервера" };
+        }
+
+        public async Task<List<ChatMessageDto>> GetMovieChatMessages(int movieId)
+        {
+            var response = await httpClient.GetAsync($"/api/Chat/movie/{movieId}");
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+                return new List<ChatMessageDto>();
+
+            return JsonSerializer.Deserialize<List<ChatMessageDto>>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? new List<ChatMessageDto>();
+        }
+
+        public async Task<List<ChatMessageDto>> GetPrivateChatMessages(int userId1, int userId2)
+        {
+            var response = await httpClient.GetAsync($"/api/Chat/private/{userId1}/{userId2}");
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+                return new List<ChatMessageDto>();
+
+            return JsonSerializer.Deserialize<List<ChatMessageDto>>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? new List<ChatMessageDto>();
+        }
+
+        public async Task<ChatMessageDto?> SendChatMessage(int senderId, SendMessageDto dto)
+        {
+            var response = await httpClient.PostAsJsonAsync($"/api/Chat/send/{senderId}", dto);
+            if (!response.IsSuccessStatusCode)
+                return null;
+                     
+            return await response.Content.ReadFromJsonAsync<ChatMessageDto>(
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+
+        public async Task<bool> DeleteChatMessage(int messageId)
+        {
+            var response = await httpClient.DeleteAsync($"/api/Chat/{messageId}");
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> EditChatMessage(int messageId, string newText)
+        {
+            var json = JsonSerializer.Serialize(newText);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await httpClient.PutAsync($"/api/Chat/{messageId}", content);
+            return response.IsSuccessStatusCode;
         }
 
     }

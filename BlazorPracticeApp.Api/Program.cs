@@ -1,4 +1,5 @@
 using BlazorPracticeApp.Api.ContextDatabase;
+using BlazorPracticeApp.Api.Hubs;
 using BlazorPracticeApp.Api.Interfaces;
 using BlazorPracticeApp.Api.JWT;
 using BlazorPracticeApp.Api.Services;
@@ -17,21 +18,23 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 
 builder.Services.AddSingleton<JwtGenerator>();
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorWasm", policy =>
     {
-        policy.WithOrigins("http://localhost:5010")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(_ => true)
+            .AllowCredentials();
     });
 });
 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -42,6 +45,7 @@ app.UseCors("AllowBlazorWasm");
 
 app.UseAuthorization();
 
+app.MapHub<ChatHub>("/chathub");
 app.MapControllers();
 
 app.Run();

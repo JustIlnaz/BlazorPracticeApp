@@ -197,6 +197,7 @@ namespace BlazorPracticeApp.Api.Services
             {
                 status = true,
                 token,
+                userId = auth_user.Id,
                 roleId = auth_user.RoleId,
                 name = auth_user.Name,
             });

@@ -50,7 +50,10 @@
         if (reqdata.status == true)
         {
             await JS.InvokeVoidAsync("sessionStorage.setItem", "token", reqdata.token);
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "userId", reqdata.userId);
             await JS.InvokeVoidAsync("sessionStorage.setItem", "role", reqdata.roleId);
+            if (!string.IsNullOrEmpty(reqdata.name))
+                await JS.InvokeVoidAsync("sessionStorage.setItem", "userName", reqdata.name);
             if (reqdata.roleId == 1)
             {
                 navigation.NavigateTo("/admin");

@@ -1,4 +1,4 @@
-﻿namespace BlazorPracticeApp.ApiRequest.Models
+namespace BlazorPracticeApp.ApiRequest.Models
 {
     public class User
     {
@@ -38,6 +38,7 @@
         public bool status { get; set; }
         public string token { get; set; }
         public string message { get; set; }
+        public int userId { get; set; }
         public int roleId { get; set; }
         public string? name { get; set; }
     }

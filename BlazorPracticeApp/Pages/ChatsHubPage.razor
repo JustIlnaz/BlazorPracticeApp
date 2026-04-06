@@ -1,0 +1,189 @@
+@page "/chat"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject ApiRequest Api
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="hub">
+    <h2 class="hub__title">Чаты</h2>
+    <p class="hub__text">Чат о фильме привязан к карточке из кино-дайджеста. Личный чат — по ID пользователя (его можно посмотреть в профиле).</p>
+
+    @if (myUserId.HasValue)
+    {
+        <p class="hub__me">Вы вошли как пользователь №@myUserId.Value</p>
+    }
+    else
+    {
+        <p class="hub__warn">Сначала <a href="/">войдите</a>, чтобы отправлять сообщения.</p>
+    }
+
+    <section class="hub__block">
+        <h3>Личный чат</h3>
+        <p class="hub__hint">Введите ID собеседника (целое число):</p>
+        <div class="hub__row">
+            <input type="number" @bind="peerIdDraft" @bind:event="oninput" class="hub__input" min="1" />
+            <button type="button" class="hub__btn" @onclick="GoPrivateAsync" disabled="@(!myUserId.HasValue || !peerIdDraft.HasValue || peerIdDraft == myUserId)">Открыть</button>
+        </div>
+    </section>
+
+    <section class="hub__block">
+        <h3>Чаты о фильмах</h3>
+        @if (movies == null)
+        {
+            <p class="muted">Загрузка…</p>
+        }
+        else if (!movies.Any())
+        {
+            <p class="muted">Фильмов пока нет.</p>
+        }
+        else
+        {
+            <ul class="hub__list">
+                @foreach (var m in movies.Take(30))
+                {
+                    <li>
+                        <button type="button" class="hub__link" @onclick="() => OpenMovieChat(m.Id)">
+                            @m.Name — чат
+                        </button>
+                    </li>
+                }
+            </ul>
+            <button type="button" class="linkish" @onclick='() => Nav.NavigateTo("/movies")'>Полный каталог фильмов</button>
+        }
+    </section>
+</div>
+
+@code {
+    private int? myUserId;
+    private int? peerIdDraft;
+    private List<Movie>? movies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uidStr = await JS.InvokeAsync<string>("sessionStorage.getItem", "userId");
+        if (int.TryParse(uidStr, out var uid) && uid > 0)
+            myUserId = uid;
+
+        var res = await Api.GetMovies();
+        movies = res.list ?? new List<Movie>();
+    }
+
+    private async Task GoPrivateAsync()
+    {
+        if (!peerIdDraft.HasValue || peerIdDraft.Value <= 0)
+            return;
+        var id = peerIdDraft.Value;
+        await Task.Yield();
+        Nav.NavigateTo($"/chat/private/{id}");
+    }
+
+    private async Task OpenMovieChat(int movieId)
+    {
+        await Task.Yield();
+        Nav.NavigateTo($"/chat/movie/{movieId}");
+    }
+}
+
+<style>
+    .hub {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .hub__title {
+        margin: 0 0 8px;
+        font-size: 24px;
+        color: #0b3d2e;
+    }
+
+    .hub__text, .hub__hint {
+        font-size: 14px;
+        color: #4b5563;
+        line-height: 1.5;
+    }
+
+    .hub__me {
+        font-size: 14px;
+        color: #047857;
+        font-weight: 600;
+    }
+
+    .hub__warn {
+        font-size: 14px;
+        color: #b45309;
+    }
+
+    .hub__block {
+        margin-top: 22px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #f8fafc, #e5e7eb);
+        border: 1px solid #d1d5db;
+    }
+
+        .hub__block h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+    .hub__row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    .hub__input {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid #9ca3af;
+        max-width: 160px;
+    }
+
+    .hub__btn {
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 0;
+        background: linear-gradient(135deg, #064e3b, #16a34a);
+        color: #ecfdf5;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .hub__btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .hub__list {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .hub__link {
+        border: 0;
+        background: none;
+        color: #047857;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 4px 0;
+        font-size: 14px;
+    }
+
+    .linkish {
+        margin-top: 10px;
+        border: 0;
+        background: none;
+        padding: 0;
+        color: #047857;
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .muted {
+        color: #6b7280;
+    }
+</style>

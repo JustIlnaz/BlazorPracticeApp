@@ -1,0 +1,95 @@
+@page "/chat/movie/{MovieId:int}"
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@inject ApiRequest Api
+@inject NavigationManager Nav
+
+<div class="chat-page">
+    <div class="chat-page__head">
+        <h2 class="chat-page__title">Чат о фильме</h2>
+        @if (movie != null)
+        {
+            <p class="chat-page__sub">@movie.Name</p>
+        }
+        <div class="chat-page__nav">
+            <button type="button" class="linkish" @onclick="GoMoviePage">Страница фильма</button>
+            <button type="button" class="linkish" @onclick="GoMovies">Все фильмы</button>
+            <button type="button" class="linkish" @onclick="GoChatsHub">Все чаты</button>
+        </div>
+    </div>
+
+    @if (!loaded)
+    {
+        <p class="muted">Загрузка...</p>
+    }
+    else if (movie == null)
+    {
+        <p class="muted">Фильм не найден.</p>
+    }
+    else
+    {
+        <ChatConversation MovieId="MovieId" />
+    }
+</div>
+
+@code {
+    [Parameter] public int MovieId { get; set; }
+
+    private Movie? movie;
+    private bool loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var res = await Api.GetMovieById(MovieId);
+        loaded = true;
+        if (res.status && res.list != null)
+            movie = res.list;
+    }
+
+    private void GoMoviePage() => Nav.NavigateTo($"/movies/{MovieId}");
+    private void GoMovies() => Nav.NavigateTo("/movies");
+    private void GoChatsHub() => Nav.NavigateTo("/chat");
+}
+
+<style>
+    .chat-page {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .chat-page__head {
+        margin-bottom: 16px;
+    }
+
+    .chat-page__title {
+        margin: 0 0 4px;
+        font-size: 22px;
+        color: #0b3d2e;
+    }
+
+    .chat-page__sub {
+        margin: 0 0 10px;
+        font-size: 15px;
+        color: #374151;
+    }
+
+    .chat-page__nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+    }
+
+    .linkish {
+        border: 0;
+        background: none;
+        padding: 0;
+        color: #047857;
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .muted {
+        color: #6b7280;
+    }
+</style>

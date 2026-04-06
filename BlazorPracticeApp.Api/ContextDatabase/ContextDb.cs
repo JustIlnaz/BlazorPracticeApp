@@ -14,6 +14,8 @@ namespace BlazorPracticeApp.Api.ContextDatabase
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Genre> Genres { get; set; }
 
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasIndex(p => p.Email).IsUnique();

@@ -1,0 +1,484 @@
+@using BlazorPracticeApp.ApiRequest
+@using BlazorPracticeApp.ApiRequest.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+@inject ApiRequest Api
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="chat-box">
+    @if (needLogin)
+    {
+        <p class="chat-hint">Войдите в систему, чтобы писать в чат.</p>
+    }
+    else if (modeInvalid)
+    {
+        <p class="chat-err">Некорректные параметры чата.</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(statusMessage))
+        {
+            <p class="chat-status">@statusMessage</p>
+        }
+
+        <div class="chat-messages">
+            @if (!messages.Any())
+            {
+                <p class="chat-hint">Пока нет сообщений. Напишите первым.</p>
+            }
+            @foreach (var m in messages)
+            {
+                <div class="chat-msg @(m.UserId == currentUserId ? "chat-msg--me" : "")">
+                    <div class="chat-msg__head">
+                        <span class="chat-msg__who">@m.UserName</span>
+                        <span class="chat-msg__when">@m.SentAt.ToLocalTime().ToString("dd.MM HH:mm")</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(m.Text))
+                    {
+                        <p class="chat-msg__text">@m.Text</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(m.ImageBase64))
+                    {
+                        <img class="chat-msg__img" src="@ImageSrc(m.ImageBase64)" alt="вложение" />
+                    }
+                    @if (isAdmin)
+                    {
+                        <div class="chat-msg__admin">
+                            <button type="button" class="btn-mini" @onclick="() => EditMsg(m)">Изменить</button>
+                            <button type="button" class="btn-mini btn-mini--danger" @onclick="() => DeleteMsg(m)">Удалить</button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="chat-input-row">
+            <label class="chat-file">
+                Фото
+                <InputFile OnChange="OnPhotoPick" accept="image/*" class="chat-file__input" />
+            </label>
+            @if (!string.IsNullOrEmpty(previewLabel))
+            {
+                <span class="chat-preview-label">@previewLabel</span>
+            }
+        </div>
+        <textarea class="chat-textarea" @bind="draftText" rows="2" placeholder="Сообщение..."></textarea>
+        <div class="chat-actions">
+            <button type="button" class="btn-send" @onclick="SendAsync" disabled="@sending">Отправить</button>
+            @if (!string.IsNullOrEmpty(pendingImageBase64))
+            {
+                <button type="button" class="btn-ghost" @onclick="ClearPhoto">Убрать фото</button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int? MovieId { get; set; }
+    [Parameter] public int? PeerUserId { get; set; }
+
+    private readonly List<ChatMessageDto> messages = new();
+    private HubConnection? hub;
+
+    private int currentUserId;
+    private bool isAdmin;
+    private bool needLogin;
+    private bool modeInvalid;
+    private bool sending;
+    private string draftText = "";
+    private string? pendingImageBase64;
+    private string? previewLabel;
+    private string? statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "role");
+            isAdmin = role == "1";
+
+            var uidStr = await JS.InvokeAsync<string>("sessionStorage.getItem", "userId");
+            if (!int.TryParse(uidStr, out currentUserId) || currentUserId <= 0)
+            {
+                needLogin = true;
+                return;
+            }
+
+            var movieMode = MovieId.HasValue && MovieId.Value > 0;
+            var privateMode = PeerUserId.HasValue && PeerUserId.Value > 0;
+            if (movieMode == privateMode)
+            {
+                modeInvalid = true;
+                return;
+            }
+
+            if (privateMode && PeerUserId!.Value == currentUserId)
+            {
+                modeInvalid = true;
+                return;
+            }
+
+            if (movieMode)
+            {
+                foreach (var m in await Api.GetMovieChatMessages(MovieId!.Value))
+                    messages.Add(m);
+            }
+            else
+            {
+                foreach (var m in await Api.GetPrivateChatMessages(currentUserId, PeerUserId!.Value))
+                    messages.Add(m);
+            }
+
+            var baseAddr = Http.BaseAddress;
+            if (baseAddr == null)
+            {
+                statusMessage = "Не задан адрес API (HttpClient.BaseAddress).";
+                return;
+            }
+
+            var hubUrl = new Uri(baseAddr, "chathub").ToString();
+            hub = new HubConnectionBuilder()
+                .WithUrl(hubUrl)
+                .WithAutomaticReconnect()
+                .Build();
+
+            hub.On<ChatMessageDto>("ReceiveMessage", OnReceiveAsync);
+
+            try
+            {
+                await hub.StartAsync();
+                if (movieMode)
+                    await hub.InvokeAsync("JoinMovieChat", MovieId!.Value);
+                else
+                    await hub.InvokeAsync("JoinPrivateChat", currentUserId, PeerUserId!.Value);
+            }
+            catch (Exception ex)
+            {
+                statusMessage = "Не удалось подключиться к чату в реальном времени: " + ex.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = "Ошибка при открытии чата: " + ex.Message;
+        }
+    }
+
+    private Task OnReceiveAsync(ChatMessageDto msg)
+    {
+        return InvokeAsync(() =>
+        {
+            try
+            {
+                if (messages.Any(x => x.Id == msg.Id))
+                    return;
+
+                if (MovieId.HasValue)
+                {
+                    if (msg.MovieId != MovieId.Value || msg.RecipientUserId != null)
+                        return;
+                }
+                else if (PeerUserId.HasValue)
+                {
+                    var peer = PeerUserId.Value;
+                    var ok =
+                        (msg.UserId == currentUserId && msg.RecipientUserId == peer) ||
+                        (msg.UserId == peer && msg.RecipientUserId == currentUserId);
+                    if (!ok)
+                        return;
+                }
+
+                messages.Add(msg);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                statusMessage = "Ошибка входящего сообщения: " + ex.Message;
+                StateHasChanged();
+            }
+        });
+    }
+
+    private async Task SendAsync()
+    {
+        if (needLogin || modeInvalid || hub == null)
+            return;
+
+        var text = (draftText ?? "").Trim();
+        if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(pendingImageBase64))
+            return;
+
+        sending = true;
+        statusMessage = null;
+        try
+        {
+            var dto = new SendMessageDto
+            {
+                Text = text,
+                ImageBase64 = pendingImageBase64,
+                MovieId = MovieId,
+                RecipientUserId = PeerUserId
+            };
+            var sent = await Api.SendChatMessage(currentUserId, dto);
+            if (sent == null)
+            {
+                statusMessage = "Не удалось отправить сообщение.";
+                return;
+            }
+
+            if (!messages.Any(x => x.Id == sent.Id))
+                messages.Add(sent);
+
+            draftText = "";
+            pendingImageBase64 = null;
+            previewLabel = null;
+        }
+        finally
+        {
+            sending = false;
+        }
+    }
+
+    private async Task OnPhotoPick(InputFileChangeEventArgs e)
+    {
+        previewLabel = null;
+        pendingImageBase64 = null;
+        var file = e.File;
+        if (file == null)
+            return;
+
+        const long max = 1024 * 1024 * 2;
+        if (file.Size > max)
+        {
+            previewLabel = "Файл слишком большой (макс. 2 МБ).";
+            return;
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: max);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var b64 = Convert.ToBase64String(ms.ToArray());
+            var mime = string.IsNullOrEmpty(file.ContentType) ? "image/jpeg" : file.ContentType;
+            pendingImageBase64 = $"data:{mime};base64,{b64}";
+            previewLabel = file.Name;
+        }
+        catch (Exception ex)
+        {
+            previewLabel = "Ошибка чтения файла: " + ex.Message;
+        }
+    }
+
+    private void ClearPhoto()
+    {
+        pendingImageBase64 = null;
+        previewLabel = null;
+    }
+
+    private async Task EditMsg(ChatMessageDto m)
+    {
+        var newText = await JS.InvokeAsync<string?>("prompt", "Новый текст сообщения:", m.Text ?? "");
+        if (newText == null)
+            return;
+        if (!await Api.EditChatMessage(m.Id, newText))
+        {
+            statusMessage = "Не удалось сохранить изменения.";
+            return;
+        }
+        m.Text = newText;
+    }
+
+    private async Task DeleteMsg(ChatMessageDto m)
+    {
+        var ok = await JS.InvokeAsync<bool>("confirm", "Удалить это сообщение?");
+        if (!ok)
+            return;
+        if (!await Api.DeleteChatMessage(m.Id))
+        {
+            statusMessage = "Не удалось удалить.";
+            return;
+        }
+        messages.Remove(m);
+    }
+
+    private static string ImageSrc(string? raw)
+    {
+        if (string.IsNullOrEmpty(raw))
+            return "";
+        return raw.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
+            ? raw
+            : "data:image/jpeg;base64," + raw;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hub != null)
+            await hub.DisposeAsync();
+    }
+}
+
+<style>
+    .chat-box {
+        border-radius: 16px;
+        padding: 14px;
+        background: linear-gradient(145deg, #020617, #0f172a);
+        border: 1px solid rgba(55, 65, 81, 0.9);
+        color: #e5e7eb;
+    }
+
+    .chat-hint, .chat-status {
+        margin: 0 0 10px;
+        font-size: 13px;
+        color: #9ca3af;
+    }
+
+    .chat-err {
+        color: #fca5a5;
+        margin: 0;
+    }
+
+    .chat-messages {
+        max-height: 420px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding: 4px;
+    }
+
+    .chat-msg {
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(71, 85, 105, 0.6);
+    }
+
+    .chat-msg--me {
+        border-color: rgba(34, 197, 94, 0.45);
+        background: rgba(6, 78, 59, 0.35);
+    }
+
+    .chat-msg__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        color: #9ca3af;
+        margin-bottom: 6px;
+    }
+
+    .chat-msg__who {
+        font-weight: 600;
+        color: #a5f3fc;
+    }
+
+    .chat-msg__text {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+    }
+
+    .chat-msg__img {
+        margin-top: 8px;
+        max-width: 100%;
+        max-height: 220px;
+        border-radius: 10px;
+        object-fit: contain;
+    }
+
+    .chat-msg__admin {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-mini {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        background: rgba(15, 23, 42, 0.8);
+        color: #e5e7eb;
+        cursor: pointer;
+    }
+
+    .btn-mini--danger {
+        border-color: rgba(248, 113, 113, 0.7);
+        color: #fecaca;
+    }
+
+    .chat-input-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    .chat-file {
+        font-size: 12px;
+        color: #7dd3fc;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .chat-file__input {
+        position: absolute;
+        width: 0;
+        height: 0;
+        opacity: 0;
+    }
+
+    .chat-preview-label {
+        font-size: 12px;
+        color: #a7f3d0;
+    }
+
+    .chat-textarea {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(55, 65, 81, 0.95);
+        background: #020617;
+        color: #e5e7eb;
+        padding: 10px 12px;
+        font-size: 14px;
+        resize: vertical;
+        margin-bottom: 10px;
+    }
+
+    .chat-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-send {
+        padding: 9px 18px;
+        border-radius: 999px;
+        border: 0;
+        background: linear-gradient(135deg, #064e3b, #16a34a);
+        color: #ecfdf5;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .btn-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-ghost {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: transparent;
+        color: #e5e7eb;
+        font-size: 12px;
+        cursor: pointer;
+    }
+</style>
